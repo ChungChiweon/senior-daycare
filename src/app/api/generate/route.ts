@@ -1,0 +1,48 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getAiProvider } from "@/lib/ai";
+
+const schema = z.object({
+  type: z.enum(["notice", "newsletter", "homepage", "blog", "instagram"]),
+  keywords: z.array(z.string()).default([]),
+  memo: z.string().optional(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        url: z.string(),
+        path: z.string().optional()
+      })
+    )
+    .default([]),
+  institution: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(["daycare_senior", "nursing_home", "welfare_center"]),
+      logoUrl: z.string().optional(),
+      address: z.string(),
+      phone: z.string()
+    })
+    .optional(),
+  activityName: z.string().optional(),
+  className: z.string().optional(),
+  ageGroup: z.string().optional(),
+  seniorName: z.string().optional(),
+  healthStatus: z.string().optional(),
+  mealStatus: z.string().optional(),
+  medicationStatus: z.string().optional(),
+  programCategory: z.string().optional(),
+  activityDate: z.string().optional(),
+  tone: z.enum(["warm", "professional", "simple", "promotion"]).optional(),
+  analyzePhotos: z.boolean().optional()
+});
+
+export async function POST(request: Request) {
+  const json = await request.json();
+  const input = schema.parse(json);
+  const content = await getAiProvider().generate(input);
+
+  return NextResponse.json({ content });
+}

@@ -1,0 +1,63 @@
+{
+  "selectedIds": [
+    "res-01",
+    "res-02",
+    "res-03"
+  ],
+  "unselectedIds": [
+    "res-04",
+    "res-05"
+  ],
+  "residentBlocksMap": {
+    "res-01": [
+      {
+        "blockType": "common_program",
+        "title": "오전 실버 건강체조",
+        "sourceType": "common",
+        "sourceData": {
+          "title": "오전 실버 건강체조",
+          "category": "신체",
+          "time": "10:30 ~ 11:30"
+        }
+      }
+    ],
+    "res-02": [
+      {
+        "blockType": "common_program",
+        "title": "오전 실버 건강체조",
+        "sourceType": "common",
+        "sourceData": {
+          "title": "오전 실버 건강체조",
+          "category": "신체",
+          "time": "10:30 ~ 11:30"
+        }
+      }
+    ],
+    "res-03": [
+      {
+        "blockType": "common_program",
+        "title": "오전 실버 건강체조",
+        "sourceType": "common",
+        "sourceData": {
+          "title": "오전 실버 건강체조",
+          "category": "신체",
+          "time": "10:30 ~ 11:30"
+        }
+      }
+    ],
+    "res-04": [],
+    "res-05": []
+  },
+  "guardianFilteredBlocks": [
+    {
+      "blockType": "attendance_transport",
+      "title": "송영",
+      "visibilityScope": "guardian_ok"
+    },
+    {
+      "blockType": "guardian_message",
+      "title": "보호자 메시지",
+      "visibilityScope": "guardian_ok"
+    }
+  ]
+}
