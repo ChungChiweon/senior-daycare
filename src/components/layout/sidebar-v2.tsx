@@ -21,6 +21,7 @@ import {
   Smartphone,
   Sparkles,
   UserCheck,
+  UserPlus,
   Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,8 @@ const navGroups: NavGroup[] = [
   {
     groupName: "기관",
     items: [
+      { href: "/staff/invite", label: "직원 초대", icon: UserPlus, badge: "✉️" },
+      { href: "/onboarding", label: "기관 온보딩", icon: Building2 },
       { href: "/staff", label: "직원·근무", icon: UserCheck },
       { href: "/reports", label: "통계·리포트", icon: PieChart },
       { href: "/settings", label: "기관 설정", icon: Settings }

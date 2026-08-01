@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RoleDashboardSwitcher } from "@/components/dashboard/RoleDashboardSwitcher";
+import { OnboardingChecklistWidget } from "@/components/dashboard/OnboardingChecklistWidget";
 
 export function DashboardClient() {
   const [activeSubTab, setActiveSubTab] = useState<"home" | "tasks" | "handover" | "alerts">("home");
@@ -85,6 +86,9 @@ export function DashboardClient() {
 
       {/* Role Dashboard Switcher Bar */}
       <RoleDashboardSwitcher />
+
+      {/* Onboarding Checklist Widget */}
+      <OnboardingChecklistWidget />
 
       {/* Sub Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-2">
