@@ -3,6 +3,7 @@ import { MobileBottomSheet } from "@/components/layout/mobile-bottom-sheet";
 import { SidebarV2 } from "@/components/layout/sidebar-v2";
 import { GlobalErpSearch } from "@/components/erp/GlobalErpSearch";
 import { ErpBreadcrumb } from "@/components/layout/ErpBreadcrumb";
+import { BetaUserAccountSwitcher } from "@/components/erp/BetaUserAccountSwitcher";
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -15,9 +16,12 @@ export function AppShell({ children }: PropsWithChildren) {
               <div className="w-full max-w-xl">
                 <GlobalErpSearch />
               </div>
-              <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-emerald-700">행복주간보호 ERP 실시간 가동 중</span>
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="text-emerald-700">행복주간보호 ERP 가동 중</span>
+                </div>
+                <BetaUserAccountSwitcher />
               </div>
             </div>
             <ErpBreadcrumb />
