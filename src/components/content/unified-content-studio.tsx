@@ -387,6 +387,7 @@ export function UnifiedContentStudio() {
           <DocumentGeneratorPanel
             residentName={activeResident.name}
             blocks={recordBlocks}
+            fieldRecords={fieldRecords}
             residents={selectedResidents}
             activeResidentId={activeResidentId}
             onSelectResident={setActiveResidentId}

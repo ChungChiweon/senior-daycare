@@ -4,16 +4,29 @@
 
 :root {
   color-scheme: light;
+  forced-color-adjust: none;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
-  background: #f7f9fb;
-  color: #17212b;
+  padding: 0;
+  background-color: #f7f9fb;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix Edge Hardware Acceleration Gradient & Contrast Washout */
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-gradient-to-b {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 button,
@@ -24,5 +37,6 @@ select {
 }
 
 ::selection {
-  background: #d5f0e9;
+  background: #38bdf8;
+  color: #ffffff;
 }

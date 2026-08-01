@@ -1,29 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Clock,
   Edit3,
+  FileCode,
   History,
+  MessageSquare,
   Printer,
   RefreshCw,
   Save,
   Send,
+  Share2,
   Sparkles,
   Zap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TWENTY_DOCUMENT_TYPES, type DocumentTypeInfo } from "@/data/twenty-document-templates";
+import { DOCUMENT_REGISTRY, getTemplateById } from "@/lib/documents/document-template-registry";
+import { buildDocumentPrompt } from "@/lib/documents/document-prompt-builder";
+import { getActionConfig } from "@/lib/documents/document-action-policy";
+import type { DocumentAction, DocumentCategoryKey, DocumentTemplateDefinition } from "@/types/document-template";
 import { localDocumentRepository } from "@/lib/repository/local-document-repository";
 import { downloadPdfFile } from "@/lib/pdf-exporter";
 import type { ExportMetadata, RecordBlock } from "@/types/record-block";
+import type { FieldRecord } from "@/components/content/MobileFieldLogger";
 
 type Props = {
   residentName: string;
   blocks: RecordBlock[];
+  fieldRecords?: FieldRecord[];
   residents?: { id: string; name: string }[];
   activeResidentId?: string;
   onSelectResident?: (id: string) => void;
@@ -34,33 +43,36 @@ type DocumentVersion = {
   time: string;
   date: string;
   text: string;
+  savedAt?: string;
+  isSaved?: boolean;
 };
 
 type CategoryGroup = {
-  category: string;
+  category: DocumentCategoryKey;
   label: string;
   icon: string;
-  items: DocumentTypeInfo[];
+  items: DocumentTemplateDefinition[];
 };
 
 export function DocumentGeneratorPanel({
   residentName,
   blocks,
+  fieldRecords = [],
   residents = [],
-  activeResidentId = "",
+  activeResidentId = "res-01",
   onSelectResident
 }: Props) {
-  // Store version history per document ID: Record<docId, DocumentVersion[]>
+  // Version history per document ID: Record<docId, DocumentVersion[]>
   const [versionHistory, setVersionHistory] = useState<Record<string, DocumentVersion[]>>({});
-  // Current active version index per document ID: Record<docId, number>
+  // Selected version index per document ID: Record<docId, number>
   const [selectedVersionIdx, setSelectedVersionIdx] = useState<Record<string, number>>({});
 
   // Accordion open states
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+  const [expandedCategories, setExpandedCategories] = useState<Record<DocumentCategoryKey, boolean>>({
     guardian: true,
     internal: true,
     program: true,
-    promo: true
+    operation: true
   });
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({ doc_01: true });
 
@@ -70,96 +82,119 @@ export function DocumentGeneratorPanel({
 
   const todayStr = useMemo(() => new Date().toLocaleDateString("ko-KR"), []);
 
-  // Group 20 documents into 4 categories
+  // 4 Document Categories mapped to DOCUMENT_REGISTRY
   const categories: CategoryGroup[] = useMemo(
     () => [
       {
         category: "guardian",
         label: "보호자 소통",
         icon: "💬",
-        items: TWENTY_DOCUMENT_TYPES.filter((d) => d.category === "guardian")
+        items: DOCUMENT_REGISTRY.filter((d) => d.category === "guardian")
       },
       {
         category: "internal",
         label: "법정·내부 기록",
         icon: "📄",
-        items: TWENTY_DOCUMENT_TYPES.filter((d) => d.category === "internal")
+        items: DOCUMENT_REGISTRY.filter((d) => d.category === "internal")
       },
       {
         category: "program",
         label: "프로그램 문서",
         icon: "🎨",
-        items: TWENTY_DOCUMENT_TYPES.filter((d) => d.category === "program")
+        items: DOCUMENT_REGISTRY.filter((d) => d.category === "program")
       },
       {
-        category: "promo",
+        category: "operation",
         label: "홍보·운영",
         icon: "📢",
-        items: TWENTY_DOCUMENT_TYPES.filter((d) => d.category === "promo")
+        items: DOCUMENT_REGISTRY.filter((d) => d.category === "operation")
       }
     ],
     []
   );
 
-  // Counter of documents that have at least 1 version
+  // Restore snapshots from localDocumentRepository upon mount / resident change
+  useEffect(() => {
+    const snapshots = localDocumentRepository.getSnapshotsByResident(activeResidentId);
+    if (snapshots.length > 0) {
+      const restoredHistory: Record<string, DocumentVersion[]> = {};
+      const restoredIdx: Record<string, number> = {};
+
+      snapshots.forEach((snap) => {
+        const docId = snap.templateId;
+        if (!restoredHistory[docId]) {
+          restoredHistory[docId] = [];
+        }
+        restoredHistory[docId].push({
+          version: restoredHistory[docId].length + 1,
+          time: snap.createdAt.slice(11, 19) || new Date().toLocaleTimeString("ko-KR"),
+          date: todayStr,
+          text: snap.editedText || snap.assembledText,
+          savedAt: snap.updatedAt.slice(11, 19),
+          isSaved: true
+        });
+        restoredIdx[docId] = 0;
+      });
+
+      setVersionHistory(restoredHistory);
+      setSelectedVersionIdx(restoredIdx);
+    }
+  }, [activeResidentId, todayStr]);
+
+  // Generated documents count
   const generatedCount = useMemo(() => {
     return Object.values(versionHistory).filter((list) => list.length > 0).length;
   }, [versionHistory]);
 
-  const totalCount = TWENTY_DOCUMENT_TYPES.length;
+  const totalCount = DOCUMENT_REGISTRY.length;
 
-  // Generate Single Document & Accumulate Version (v1, v2, v3...)
-  async function handleGenerateSingle(docInfo: DocumentTypeInfo) {
+  // Single Document Generation with Document Registry & Block Filtering
+  async function handleGenerateSingle(template: DocumentTemplateDefinition) {
     const timeStr = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
-    // Call AI Generation API Route
+    // Build prompt & filter blocks using Document Prompt Builder
+    const promptInfo = buildDocumentPrompt(template, blocks, residentName, todayStr, fieldRecords);
+
     try {
       const res = await fetch("/api/generate-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ residentName, activityDate: todayStr, docId: docInfo.id })
+        body: JSON.stringify({
+          residentName,
+          activityDate: todayStr,
+          docId: template.id,
+          blocks: promptInfo.filteredBlocks,
+          fieldRecords
+        })
       });
       const data = await res.json();
-      const newText = data.text || docInfo.defaultDraftGenerator(residentName, todayStr);
+      const newText = data.text;
 
       setVersionHistory((prev) => {
-        const currentList = prev[docInfo.id] || [];
+        const currentList = prev[template.id] || [];
         const newVerNumber = currentList.length + 1;
         const newVer: DocumentVersion = {
           version: newVerNumber,
           time: timeStr,
           date: todayStr,
-          text: newText
+          text: newText,
+          isSaved: false
         };
-        const updatedList = [newVer, ...currentList];
-        return { ...prev, [docInfo.id]: updatedList };
+        return { ...prev, [template.id]: [newVer, ...currentList] };
       });
 
-      setSelectedVersionIdx((prev) => ({ ...prev, [docInfo.id]: 0 }));
-      setExpandedDocs((prev) => ({ ...prev, [docInfo.id]: true }));
+      setSelectedVersionIdx((prev) => ({ ...prev, [template.id]: 0 }));
+      setExpandedDocs((prev) => ({ ...prev, [template.id]: true }));
 
-      const currentVerCount = (versionHistory[docInfo.id]?.length || 0) + 1;
-      setNotification(`✨ [${docInfo.title}] v${currentVerCount} 문안이 생성되어 누적 저장되었습니다.`);
+      const verCount = (versionHistory[template.id]?.length || 0) + 1;
+      setNotification(`✨ [${template.title}] v${verCount} 문안이 생성되었습니다.`);
       setTimeout(() => setNotification(""), 3500);
-    } catch {
-      // Fallback AI generation
-      const newText = docInfo.defaultDraftGenerator(residentName, todayStr);
-      setVersionHistory((prev) => {
-        const currentList = prev[docInfo.id] || [];
-        const newVerNumber = currentList.length + 1;
-        const newVer: DocumentVersion = {
-          version: newVerNumber,
-          time: timeStr,
-          date: todayStr,
-          text: newText
-        };
-        return { ...prev, [docInfo.id]: [newVer, ...currentList] };
-      });
-      setSelectedVersionIdx((prev) => ({ ...prev, [docInfo.id]: 0 }));
+    } catch (err) {
+      console.error("Single generation error", err);
     }
   }
 
-  // Batch Generate ALL 20 Documents with Real API & Accumulate Versions
+  // Batch Generate ALL 20 Documents
   async function handleGenerateAll() {
     setIsBatchGenerating(true);
     setBatchProgress(0);
@@ -169,100 +204,119 @@ export function DocumentGeneratorPanel({
       const res = await fetch("/api/generate-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ residentName, activityDate: todayStr })
+        body: JSON.stringify({
+          residentName,
+          activityDate: todayStr,
+          blocks,
+          fieldRecords
+        })
       });
       const data = await res.json();
       const results = data.results || {};
 
       setVersionHistory((prev) => {
         const nextHistory = { ...prev };
-        TWENTY_DOCUMENT_TYPES.forEach((docInfo) => {
-          const generatedText = results[docInfo.id]?.text || docInfo.defaultDraftGenerator(residentName, todayStr);
-          const currentList = nextHistory[docInfo.id] || [];
-          const newVerNumber = currentList.length + 1;
-
-          const newVer: DocumentVersion = {
-            version: newVerNumber,
-            time: timeStr,
-            date: todayStr,
-            text: generatedText
-          };
-          nextHistory[docInfo.id] = [newVer, ...currentList];
+        DOCUMENT_REGISTRY.forEach((template) => {
+          const text = results[template.id]?.text || "";
+          if (text) {
+            const currentList = nextHistory[template.id] || [];
+            const newVerNumber = currentList.length + 1;
+            const newVer: DocumentVersion = {
+              version: newVerNumber,
+              time: timeStr,
+              date: todayStr,
+              text,
+              isSaved: false
+            };
+            nextHistory[template.id] = [newVer, ...currentList];
+          }
         });
         return nextHistory;
       });
 
-      // Set all selected versions to index 0 (latest)
       const nextIdx: Record<string, number> = {};
-      TWENTY_DOCUMENT_TYPES.forEach((d) => (nextIdx[d.id] = 0));
+      DOCUMENT_REGISTRY.forEach((d) => (nextIdx[d.id] = 0));
       setSelectedVersionIdx(nextIdx);
 
       setIsBatchGenerating(false);
-      setNotification(`✨ [${residentName} 어르신] 20종 전 문서의 최신 버전이 성공적으로 생성·누적되었습니다!`);
+      setNotification(`✨ [${residentName} 어르신] 전체 20종 문서의 최신 버전이 정상 작성되었습니다!`);
       setTimeout(() => setNotification(""), 5000);
     } catch {
       setIsBatchGenerating(false);
     }
   }
 
-  // Handle Manual Text Edit for Active Version
+  // Handle Manual User Text Modification & Retain Edits
   function handleTextChange(docId: string, newText: string) {
     setVersionHistory((prev) => {
       const list = prev[docId] || [];
       if (list.length === 0) return prev;
       const idx = selectedVersionIdx[docId] || 0;
       const updatedList = [...list];
-      updatedList[idx] = { ...updatedList[idx], text: newText };
+      updatedList[idx] = {
+        ...updatedList[idx],
+        text: newText,
+        isSaved: false
+      };
       return { ...prev, [docId]: updatedList };
     });
   }
 
-  // Save Document to Repository
-  function handleSaveDoc(docTitle: string, docId: string) {
-    const history = versionHistory[docId] || [];
-    const idx = selectedVersionIdx[docId] || 0;
+  // Execute Action Policy (Save, Send, PDF Export, HWPX)
+  function handleExecuteAction(template: DocumentTemplateDefinition, action: DocumentAction) {
+    const history = versionHistory[template.id] || [];
+    const idx = selectedVersionIdx[template.id] || 0;
     const activeVer = history[idx];
 
     if (!activeVer) return;
 
-    localDocumentRepository.saveSnapshot({
-      documentId: `doc-${docId}-${Date.now()}`,
-      templateId: docId,
-      residentId: activeResidentId || "res-01",
-      residentName,
-      sourceBlockIds: blocks.map((b) => b.id),
-      sourceBlockVersions: Object.fromEntries(blocks.map((b) => [b.id, b.version])),
-      assembledText: activeVer.text,
-      editedText: activeVer.text,
-      approvalStatus: "approved",
-      requiresNewVersion: false,
-      exportedFiles: [],
-      createdAt: activeVer.time,
-      updatedAt: new Date().toISOString()
-    });
+    const config = getActionConfig(action);
 
-    setNotification(`💾 [${docTitle} v${activeVer.version}] 문서가 버전 저장소에 안심 보관되었습니다.`);
+    if (action === "save") {
+      localDocumentRepository.saveSnapshot({
+        documentId: `doc-${template.id}-${Date.now()}`,
+        templateId: template.id,
+        residentId: activeResidentId,
+        residentName,
+        sourceBlockIds: blocks.map((b) => b.id),
+        sourceBlockVersions: Object.fromEntries(blocks.map((b) => [b.id, b.version])),
+        assembledText: activeVer.text,
+        editedText: activeVer.text,
+        approvalStatus: "approved",
+        requiresNewVersion: false,
+        exportedFiles: [],
+        createdAt: activeVer.time,
+        updatedAt: new Date().toISOString()
+      });
+
+      setVersionHistory((prev) => {
+        const list = prev[template.id] || [];
+        const updatedList = [...list];
+        updatedList[idx] = {
+          ...updatedList[idx],
+          isSaved: true,
+          savedAt: new Date().toLocaleTimeString("ko-KR")
+        };
+        return { ...prev, [template.id]: updatedList };
+      });
+    } else if (action === "export_pdf") {
+      const exportMetadata: ExportMetadata = {
+        author: "박지영 사회복지사",
+        reviewer: "김철수 팀장",
+        approver: "이영희 센터장",
+        version: activeVer.version,
+        exportedAt: activeVer.time,
+        documentTitle: template.title,
+        residentName
+      };
+      downloadPdfFile(`${template.title}_${residentName}.pdf`, template.title, blocks, exportMetadata);
+    }
+
+    setNotification(`✅ [${template.title} v${activeVer.version}] ${config.confirmMessage}`);
     setTimeout(() => setNotification(""), 3500);
   }
 
-  // Export PDF
-  function handlePdfExport(docTitle: string, text: string) {
-    const exportMetadata: ExportMetadata = {
-      author: "박지영 사회복지사",
-      reviewer: "김철수 팀장",
-      approver: "이영희 센터장",
-      version: 1,
-      exportedAt: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
-      documentTitle: docTitle,
-      residentName
-    };
-
-    downloadPdfFile(`${docTitle}_${residentName}.pdf`, docTitle, blocks, exportMetadata);
-    setNotification(`📄 [${docTitle}] 실제 PDF 문서가 생성되었습니다.`);
-    setTimeout(() => setNotification(""), 3000);
-  }
-
-  function toggleCategory(cat: string) {
+  function toggleCategory(cat: DocumentCategoryKey) {
     setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
   }
 
@@ -270,12 +324,31 @@ export function DocumentGeneratorPanel({
     setExpandedDocs((prev) => ({ ...prev, [docId]: !prev[docId] }));
   }
 
+  function getActionIcon(iconName: string) {
+    switch (iconName) {
+      case "Save":
+        return <Save size={13} />;
+      case "Send":
+        return <Send size={13} />;
+      case "MessageSquare":
+        return <MessageSquare size={13} />;
+      case "Printer":
+        return <Printer size={13} />;
+      case "FileCode":
+        return <FileCode size={13} />;
+      case "Share2":
+        return <Share2 size={13} />;
+      default:
+        return <CheckCircle2 size={13} />;
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm space-y-4 text-xs">
       {/* 👥 Resident Selector Tabs */}
       {residents.length > 0 && onSelectResident && (
         <div className="rounded-lg bg-slate-100 p-1.5 flex overflow-x-auto gap-1 border border-slate-200">
-          <span className="text-[11px] font-bold text-slate-500 self-center px-1 shrink-0">문서 생성 대상:</span>
+          <span className="text-[11px] font-bold text-slate-500 self-center px-1 shrink-0">문서 대상 수급자:</span>
           {residents.map((r) => {
             const isActive = r.id === activeResidentId;
             return (
@@ -294,23 +367,23 @@ export function DocumentGeneratorPanel({
         </div>
       )}
 
-      {/* 🚀 Main Impact Header Banner */}
+      {/* 🚀 Main Header Banner */}
       <div className="rounded-xl bg-gradient-to-br from-sky-900 via-indigo-900 to-slate-900 p-4 text-white shadow-md space-y-3">
         <div className="flex items-start justify-between">
           <div>
             <Badge className="bg-sky-400/20 text-sky-200 border-sky-300/30 text-[10px] mb-1 font-bold">
-              AI 20종 문서 자동 작성 및 버전 누적 엔진
+              레지스트리 기반 20종 AI 문서 자동 작성 시스템
             </Badge>
             <h3 className="font-extrabold text-base text-white tracking-tight leading-snug">
               “오늘 기록 한 번으로 <span className="text-sky-300 underline underline-offset-4 font-black">20종 문서</span>가 자동 작성됩니다.”
             </h3>
             <p className="text-[11px] text-slate-300 mt-1">
-              수급자: <strong className="text-white font-bold">{residentName} 어르신</strong> | 날짜: {todayStr} (동일 날짜 생성 시 v1, v2, v3 버전 누적)
+              수급자: <strong className="text-white font-bold">{residentName} 어르신</strong> | 작성일: {todayStr} (동일 날짜 생성 시 v1, v2, v3 누적)
             </p>
           </div>
           <div className="text-right shrink-0">
             <span className="text-2xl font-black text-sky-400">{generatedCount}</span>
-            <span className="text-xs text-slate-400 font-bold"> / 20종</span>
+            <span className="text-xs text-slate-400 font-bold"> / {totalCount}종</span>
           </div>
         </div>
 
@@ -328,7 +401,7 @@ export function DocumentGeneratorPanel({
           </div>
         </div>
 
-        {/* ✨ Batch Run Button */}
+        {/* Batch Generate Button */}
         <Button
           disabled={isBatchGenerating}
           onClick={handleGenerateAll}
@@ -337,7 +410,7 @@ export function DocumentGeneratorPanel({
           {isBatchGenerating ? (
             <>
               <RefreshCw size={15} className="animate-spin" />
-              <span>실시간 AI 20종 문서 생성 중... ({batchProgress}/20)</span>
+              <span>실시간 AI 20종 문서 동적 합성 중...</span>
             </>
           ) : (
             <>
@@ -355,7 +428,7 @@ export function DocumentGeneratorPanel({
         </div>
       )}
 
-      {/* 📁 4 Accordion Document Category Groups */}
+      {/* 📁 4 Category Accordion Groups */}
       <div className="space-y-3">
         {categories.map((catGroup) => {
           const isCatExpanded = expandedCategories[catGroup.category] ?? true;
@@ -379,30 +452,30 @@ export function DocumentGeneratorPanel({
                 {isCatExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
 
-              {/* Category Content Items */}
+              {/* Category Items */}
               {isCatExpanded && (
                 <div className="p-2 space-y-2 bg-white">
-                  {catGroup.items.map((docInfo) => {
-                    const history = versionHistory[docInfo.id] || [];
+                  {catGroup.items.map((template) => {
+                    const history = versionHistory[template.id] || [];
                     const hasVersions = history.length > 0;
-                    const activeIdx = selectedVersionIdx[docInfo.id] || 0;
+                    const activeIdx = selectedVersionIdx[template.id] || 0;
                     const activeVersion = history[activeIdx] || null;
-                    const isDocOpen = expandedDocs[docInfo.id] ?? false;
+                    const isDocOpen = expandedDocs[template.id] ?? false;
 
                     return (
                       <div
-                        key={docInfo.id}
+                        key={template.id}
                         className={`rounded-lg border transition-all ${
                           hasVersions ? "border-emerald-200 bg-emerald-50/20" : "border-slate-200 bg-white"
                         }`}
                       >
-                        {/* Item Header */}
+                        {/* Item Bar */}
                         <div
-                          onClick={() => toggleDoc(docInfo.id)}
+                          onClick={() => toggleDoc(template.id)}
                           className="flex items-center justify-between p-2.5 cursor-pointer hover:bg-slate-50 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900">{docInfo.title}</span>
+                            <span className="font-bold text-slate-900">{template.title}</span>
                             {hasVersions ? (
                               <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] flex items-center gap-1 font-bold">
                                 <CheckCircle2 size={11} /> 생성 완료 (v{history[0].version})
@@ -413,7 +486,6 @@ export function DocumentGeneratorPanel({
                               </Badge>
                             )}
 
-                            {/* Version Accumulation Counter Badge */}
                             {history.length > 1 && (
                               <Badge className="bg-sky-100 text-sky-800 border-sky-200 text-[9px] font-extrabold flex items-center gap-1">
                                 <History size={10} /> {history.length}개 버전 누적
@@ -421,46 +493,50 @@ export function DocumentGeneratorPanel({
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 hidden sm:inline">{docInfo.targetAudience}</span>
+                            <span className="text-[10px] text-slate-400 hidden sm:inline">{template.targetAudienceLabel}</span>
                             {isDocOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                           </div>
                         </div>
 
-                        {/* Item Body */}
+                        {/* Item Accordion Body */}
                         {isDocOpen && (
                           <div className="border-t border-slate-100 p-3 space-y-3 bg-white">
-                            <p className="text-[11px] text-slate-500">{docInfo.description}</p>
+                            {/* Minimum 1-line description */}
+                            <p className="text-[11px] text-slate-500">{template.description}</p>
 
                             {!hasVersions || !activeVersion ? (
-                              /* Before Generation State */
+                              /* BEFORE GENERATION STATE: Body is completely EMPTY! */
                               <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center space-y-2">
-                                <p className="text-[11px] text-slate-400 font-medium">
-                                  아직 생성되지 않았습니다. [개별 문서 생성] 버튼을 누르시면 입력 사실을 기반으로 실제 문안이 생성됩니다.
+                                <p className="text-[11px] text-slate-500 font-bold">
+                                  아직 생성되지 않았습니다.
+                                </p>
+                                <p className="text-[10px] text-slate-400">
+                                  아래 [AI 생성] 버튼을 누르면 입력 사실(RecordBlock 및 외근 팩트)을 조합하여 실제 문안이 작성됩니다.
                                 </p>
                                 <Button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleGenerateSingle(docInfo);
+                                    handleGenerateSingle(template);
                                   }}
-                                  className="bg-sky-600 hover:bg-sky-700 font-bold text-xs h-8 px-3 inline-flex items-center gap-1.5"
+                                  className="bg-sky-600 hover:bg-sky-700 font-bold text-xs h-8 px-3 inline-flex items-center gap-1.5 text-white"
                                 >
-                                  <Zap size={13} /> 이 문서 개별 생성
+                                  <Zap size={13} /> AI 생성
                                 </Button>
                               </div>
                             ) : (
-                              /* After Generation State with Version History Accumulation */
-                              <div className="space-y-2">
+                              /* AFTER GENERATION STATE: Editable Text Area + Version Controls + Policy Actions */
+                              <div className="space-y-2.5">
                                 {/* Version Selector Bar */}
                                 <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px]">
                                   <div className="flex items-center gap-2">
                                     <History size={13} className="text-sky-600" />
-                                    <span className="font-bold text-slate-800">버전 선택:</span>
+                                    <span className="font-bold text-slate-800">버전 히스토리:</span>
                                     <select
                                       value={activeIdx}
                                       onChange={(e) =>
                                         setSelectedVersionIdx((prev) => ({
                                           ...prev,
-                                          [docInfo.id]: Number(e.target.value)
+                                          [template.id]: Number(e.target.value)
                                         }))
                                       }
                                       className="h-7 rounded border border-slate-300 bg-white px-2 text-xs font-bold text-slate-900 outline-none"
@@ -472,57 +548,58 @@ export function DocumentGeneratorPanel({
                                       ))}
                                     </select>
                                   </div>
-                                  <span className="text-[10px] text-slate-400">
-                                    오늘 누적 생성 횟수: <strong>{history.length}회</strong>
-                                  </span>
+
+                                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <span className="flex items-center gap-1">
+                                      <Clock size={11} /> 생성: {activeVersion.time}
+                                    </span>
+                                    {activeVersion.isSaved && (
+                                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[9px] font-bold">
+                                        💾 저장 완료 ({activeVersion.savedAt})
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className="flex items-center justify-between text-[11px] pt-1">
+                                <div className="flex items-center justify-between text-[11px]">
                                   <span className="font-bold text-slate-700 flex items-center gap-1">
                                     <Edit3 size={12} /> v{activeVersion.version} 생성 문안 (수정 가능):
                                   </span>
-                                  <span className="text-[10px] text-slate-400">톤: {docInfo.toneStyle}</span>
+                                  <span className="text-[10px] text-slate-400">
+                                    대상: {template.targetAudienceLabel} | 톤: {template.tone}
+                                  </span>
                                 </div>
 
+                                {/* Editable Text Area */}
                                 <textarea
-                                  rows={4}
+                                  rows={5}
                                   value={activeVersion.text}
-                                  onChange={(e) => handleTextChange(docInfo.id, e.target.value)}
+                                  onChange={(e) => handleTextChange(template.id, e.target.value)}
                                   className="w-full rounded-lg border border-slate-200 bg-slate-50/50 p-2.5 text-xs text-slate-900 font-sans focus:bg-white focus:border-sky-400 focus:ring-2 focus:ring-sky-200 outline-none transition-all leading-relaxed"
                                 />
 
-                                {/* Action Buttons */}
-                                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
-                                  <div className="flex items-center gap-1.5">
-                                    {docInfo.actionType === "send" ? (
-                                      <Button
-                                        className="bg-purple-600 hover:bg-purple-700 font-bold text-[11px] h-7 px-2.5 flex items-center gap-1"
-                                        onClick={() => alert(`[${docInfo.title} v${activeVersion.version}] 문안이 발송 채널로 전송되었습니다.`)}
-                                      >
-                                        <Send size={12} /> 발송하기
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        className="bg-emerald-600 hover:bg-emerald-700 font-bold text-[11px] h-7 px-2.5 flex items-center gap-1"
-                                        onClick={() => handleSaveDoc(docInfo.title, docInfo.id)}
-                                      >
-                                        <Save size={12} /> 문서 저장 (v{activeVersion.version})
-                                      </Button>
-                                    )}
-
-                                    <Button
-                                      variant="secondary"
-                                      className="font-bold text-[11px] h-7 px-2 flex items-center gap-1"
-                                      onClick={() => handlePdfExport(docInfo.title, activeVersion.text)}
-                                    >
-                                      <Printer size={12} /> PDF 출력
-                                    </Button>
+                                {/* Action Buttons Separated by Action Policy */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    {template.actions.map((act) => {
+                                      const config = getActionConfig(act);
+                                      return (
+                                        <Button
+                                          key={act}
+                                          className={`h-7 px-2.5 text-[11px] flex items-center gap-1 ${config.buttonClass}`}
+                                          onClick={() => handleExecuteAction(template, act)}
+                                        >
+                                          {getActionIcon(config.iconName)}
+                                          <span>{config.label}</span>
+                                        </Button>
+                                      );
+                                    })}
                                   </div>
 
                                   <Button
                                     variant="ghost"
                                     className="text-sky-700 hover:bg-sky-50 font-bold text-[10px] h-7 px-2 flex items-center gap-1"
-                                    onClick={() => handleGenerateSingle(docInfo)}
+                                    onClick={() => handleGenerateSingle(template)}
                                   >
                                     <RefreshCw size={11} /> 다시 생성 (새 버전 누적)
                                   </Button>
