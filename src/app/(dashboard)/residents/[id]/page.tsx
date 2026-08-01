@@ -9,6 +9,8 @@ import { mockResidents } from "@/data/mock-daycare-store";
 
 import { ResidentTimeline } from "@/components/erp/ResidentTimeline";
 
+import { ResidentSummaryCard } from "@/components/erp/ResidentSummaryCard";
+
 const detailTabs = [
   { id: "timeline", label: "⏱️ 통합 타임라인" },
   { id: "basic", label: "기본정보" },
@@ -67,6 +69,14 @@ export default function ResidentDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </div>
+
+      {/* 5-Second Resident Summary Card */}
+      <ResidentSummaryCard
+        residentName={resident.name}
+        residentId={resident.id}
+        gradeLabel={resident.gradeLabel}
+        age={resident.age}
+      />
 
       {/* 11 Sub Tabs */}
       <div className="flex overflow-x-auto gap-1 border-b border-slate-200 pb-2">
