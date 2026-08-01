@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RoleDashboardSwitcher } from "@/components/dashboard/RoleDashboardSwitcher";
 
 export function DashboardClient() {
   const [activeSubTab, setActiveSubTab] = useState<"home" | "tasks" | "handover" | "alerts">("home");
@@ -81,6 +82,9 @@ export function DashboardClient() {
           </Link>
         </div>
       </div>
+
+      {/* Role Dashboard Switcher Bar */}
+      <RoleDashboardSwitcher />
 
       {/* Sub Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-2">

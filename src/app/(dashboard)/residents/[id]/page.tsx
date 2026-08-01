@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mockResidents } from "@/data/mock-daycare-store";
 
+import { ResidentTimeline } from "@/components/erp/ResidentTimeline";
+
 const detailTabs = [
+  { id: "timeline", label: "⏱️ 통합 타임라인" },
   { id: "basic", label: "기본정보" },
   { id: "guardian", label: "보호자정보" },
   { id: "contract", label: "등급/계약" },
@@ -24,7 +27,7 @@ const detailTabs = [
 export default function ResidentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const resident = mockResidents.find((r) => r.id === resolvedParams.id) ?? mockResidents[0];
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState("timeline");
 
   return (
     <div className="space-y-6">
@@ -81,6 +84,10 @@ export default function ResidentDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Tab Content Display */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+        {activeTab === "timeline" && (
+          <ResidentTimeline residentName={resident.name} residentId={resident.id} />
+        )}
+
         {activeTab === "basic" && (
           <div className="space-y-6">
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">기본 인적사항 & 케어 현황</h2>

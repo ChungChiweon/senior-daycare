@@ -17,6 +17,7 @@ import {
   MessageSquare,
   PieChart,
   Settings,
+  ShieldAlert,
   Sparkles,
   UserCheck,
   Users
@@ -42,6 +43,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/dashboard", label: "홈", icon: LayoutDashboard },
       { href: "/daily-care", label: "오늘의 케어", icon: Activity, badge: "필수" },
+      { href: "/tasks", label: "협업 업무 센터", icon: CheckSquare, badge: "N" },
       { href: "/create", label: "통합 문서 AI", icon: Sparkles }
     ]
   },
@@ -57,6 +59,7 @@ const navGroups: NavGroup[] = [
   {
     groupName: "운영",
     items: [
+      { href: "/risk-center", label: "운영 리스크 센터", icon: ShieldAlert, badge: "🔴 3" },
       { href: "/documents", label: "문서 자동화", icon: FileSpreadsheet },
       { href: "/approvals", label: "승인 센터", icon: CheckSquare, badge: "5" },
       { href: "/compliance", label: "평가·감사 대응", icon: Award },
