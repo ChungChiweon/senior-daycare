@@ -66,7 +66,10 @@ export function buildDocumentPrompt(
 - 작성 대상: ${template.targetAudienceLabel}
 - 문체 톤: ${toneInstruction}
 - 분량 지침: ${lengthInstruction}
-- 보안 규칙: 허용되지 않은 민감 블록(${template.excludedBlocks.join(", ") || "없음"})은 절대로 문안에 포함하지 마십시오.`;
+- 보안 규칙: 허용되지 않은 민감 블록(${template.excludedBlocks.join(", ") || "없음"})은 절대로 문안에 포함하지 마십시오.
+- ⭐ 할루시네이션 방지 규칙 (Zero-Hallucination Guardrail):
+  1. 입력된 팩트에 없는 추측성 판단(예: "활력이 증가했습니다", "통증이 완화되었습니다", "성격이 밝아졌습니다", "건강 상태가 향상되었습니다")을 절대로 임의 작성하지 마십시오.
+  2. 오직 수집된 팩트(식사량, 프로그램 참여 사실, 통증 표현 사실, 휴식 조치)만 객관적 사실 어조로 서술하십시오.`;
 
   const userPrompt = `[기초 입력 정보]
 - 수급자명: ${residentName} 어르신
