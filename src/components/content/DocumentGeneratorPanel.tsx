@@ -28,6 +28,8 @@ import { localDocumentRepository } from "@/lib/repository/local-document-reposit
 import { downloadPdfFile } from "@/lib/pdf-exporter";
 import type { ExportMetadata, RecordBlock } from "@/types/record-block";
 import type { FieldRecord } from "@/components/content/MobileFieldLogger";
+import { detectRecordConflicts, type RecordConflict } from "@/lib/ai/record-conflict-detector";
+import { FactTraceabilityModal } from "@/components/content/FactTraceabilityModal";
 
 type Props = {
   residentName: string;
@@ -79,8 +81,13 @@ export function DocumentGeneratorPanel({
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
   const [notification, setNotification] = useState("");
+  const [tracingSentence, setTracingSentence] = useState<string | null>(null);
 
   const todayStr = useMemo(() => new Date().toLocaleDateString("ko-KR"), []);
+
+  const detectedConflicts: RecordConflict[] = useMemo(() => {
+    return detectRecordConflicts(blocks, residentName, activeResidentId);
+  }, [blocks, residentName, activeResidentId]);
 
   // 4 Document Categories mapped to DOCUMENT_REGISTRY
   const categories: CategoryGroup[] = useMemo(
@@ -428,6 +435,33 @@ export function DocumentGeneratorPanel({
         </div>
       )}
 
+      {/* ⚠️ AI Record Conflict Warning Banner */}
+      {detectedConflicts.length > 0 && (
+        <div className="rounded-xl bg-amber-50 border border-amber-300 p-3 space-y-1.5 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-amber-950 font-black text-xs">
+            <Zap size={15} className="text-amber-600 shrink-0" />
+            <span>⚠ 확인 필요: 원본 관찰 기록 간 내용 차이가 감지되었습니다. (AI 충돌 보호)</span>
+          </div>
+          {detectedConflicts.map((cf) => (
+            <p key={cf.id} className="text-[11px] text-amber-900 font-semibold leading-relaxed pl-5">
+              • {cf.description}
+            </p>
+          ))}
+          <p className="text-[10px] text-amber-800 font-bold pl-5">
+            💡 문서 생성 및 조립은 가능하나, 사회복지사 검토 후 최종 결재 승인 진행을 권장합니다.
+          </p>
+        </div>
+      )}
+
+      {/* 🔍 Fact Traceability Modal */}
+      {tracingSentence && (
+        <FactTraceabilityModal
+          sentenceText={tracingSentence}
+          sourceBlock={blocks[0]}
+          onClose={() => setTracingSentence(null)}
+        />
+      )}
+
       {/* 📁 4 Category Accordion Groups */}
       <div className="space-y-3">
         {categories.map((catGroup) => {
@@ -565,6 +599,13 @@ export function DocumentGeneratorPanel({
                                   <span className="font-bold text-slate-700 flex items-center gap-1">
                                     <Edit3 size={12} /> v{activeVersion.version} 생성 문안 (수정 가능):
                                   </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setTracingSentence(activeVersion.text.slice(0, 100))}
+                                    className="text-sky-700 hover:text-sky-900 font-extrabold flex items-center gap-1 text-[11px] underline"
+                                  >
+                                    <Sparkles size={12} /> [🔍 원천 팩트 근거 보기]
+                                  </button>
                                   <span className="text-[10px] text-slate-400">
                                     대상: {template.targetAudienceLabel} | 톤: {template.tone}
                                   </span>
