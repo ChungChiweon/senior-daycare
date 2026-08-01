@@ -18,8 +18,10 @@ import {
   PieChart,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   Smartphone,
   Sparkles,
+  Upload,
   UserCheck,
   UserPlus,
   Users
@@ -54,6 +56,7 @@ const navGroups: NavGroup[] = [
     groupName: "이용자",
     items: [
       { href: "/residents", label: "이용자 관리", icon: Users },
+      { href: "/import", label: "CSV 일괄 이관", icon: Upload, badge: "⚡" },
       { href: "/case-management", label: "사례관리", icon: FileCheck },
       { href: "/programs", label: "프로그램", icon: Activity },
       { href: "/communications", label: "보호자 소통", icon: MessageSquare }
@@ -74,6 +77,7 @@ const navGroups: NavGroup[] = [
   {
     groupName: "기관",
     items: [
+      { href: "/admin", label: "SaaS 슈퍼어드민", icon: ShieldCheck, badge: "👑" },
       { href: "/staff/invite", label: "직원 초대", icon: UserPlus, badge: "✉️" },
       { href: "/onboarding", label: "기관 온보딩", icon: Building2 },
       { href: "/staff", label: "직원·근무", icon: UserCheck },
