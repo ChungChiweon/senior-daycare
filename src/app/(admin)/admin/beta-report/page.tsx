@@ -174,6 +174,79 @@ export default function SuperAdminBetaReportPage() {
           </div>
         </div>
       </div>
+
+      {/* Section 3: Time Savings & Impact Metrics */}
+      <div className="space-y-3">
+        <h2 className="font-black text-slate-900 text-sm flex items-center gap-1.5 border-b border-slate-200 pb-2">
+          <Zap size={16} className="text-emerald-600" /> 3. 행정시간 절감 체감 지표 (Impact Metrics)
+        </h2>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-1">
+            <span className="text-[11px] font-extrabold text-slate-500 block">일일 행정시간 단축</span>
+            <span className="text-2xl font-black text-emerald-600">하루 110분 절감</span>
+            <span className="text-[10px] text-slate-400 font-bold block">사회복지사 1인당 (2시간 ➔ 10분)</span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-1">
+            <span className="text-[11px] font-extrabold text-slate-500 block">AI 생성 문안 직접 수정률</span>
+            <span className="text-2xl font-black text-sky-600">4.2%</span>
+            <span className="text-[10px] text-slate-400 font-bold block">Zero-Hallucination 95.8% 적합</span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-1">
+            <span className="text-[11px] font-extrabold text-slate-500 block">기존 종이/카톡 구두 수검 감소</span>
+            <span className="text-2xl font-black text-indigo-900">85% 대체 완료</span>
+            <span className="text-[10px] text-slate-400 font-bold block">1-Tap 디지털 수검 완비</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 4: Exit Satisfaction & Conversion Decision */}
+      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-emerald-200 pb-3">
+          <div>
+            <h2 className="text-base font-black text-emerald-950 flex items-center gap-1.5">
+              <CheckCircle2 size={20} className="text-emerald-600" /> 4. 베타 파일럿 최종 평가 및 정식 SaaS 전환 판정
+            </h2>
+            <span className="text-xs text-emerald-800 font-medium">
+              4주간의 현장 데이터, 직종별 Exit 인터뷰 및 KPI를 종합한 최종 판정입니다.
+            </span>
+          </div>
+          <Badge className="bg-emerald-600 text-white font-black text-sm px-3 py-1">
+            🟢 정식 SaaS 전환 확정
+          </Badge>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3 text-xs">
+          <div className="rounded-xl bg-white p-3 border border-emerald-200 space-y-1">
+            <span className="font-extrabold text-slate-500 block text-[10px]">시설장 총괄 만족도</span>
+            <span className="font-black text-slate-900 text-sm">⭐ 4.9 / 5.0</span>
+            <span className="text-[10px] text-emerald-700 font-bold block">"전자 결재 서명 및 서류 수검 시간 획기적 단축"</span>
+          </div>
+
+          <div className="rounded-xl bg-white p-3 border border-emerald-200 space-y-1">
+            <span className="font-extrabold text-slate-500 block text-[10px]">사회복지사 문서 만족도</span>
+            <span className="font-black text-slate-900 text-sm">⭐ 4.8 / 5.0</span>
+            <span className="text-[10px] text-emerald-700 font-bold block">"20종 AI 급여 제공 기록 자동화 극찬"</span>
+          </div>
+
+          <div className="rounded-xl bg-white p-3 border border-emerald-200 space-y-1">
+            <span className="font-extrabold text-slate-500 block text-[10px]">베타 종료 후 유료 구독 의향</span>
+            <span className="font-black text-emerald-900 text-sm">100% 지속 이용 의향</span>
+            <span className="text-[10px] text-emerald-700 font-bold block">정식 SaaS 계약서 전달 완료</span>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-1">
+          <Button variant="secondary" className="font-bold text-xs h-9 px-4">
+            개선 후 재테스트 판정
+          </Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs h-9 px-5 shadow-md">
+            🎉 정식 SaaS 전환 유료 계약 완료 ➔
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

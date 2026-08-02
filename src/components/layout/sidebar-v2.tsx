@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileCheck,
   FileSpreadsheet,
+  Flag,
   GraduationCap,
   LayoutDashboard,
   LifeBuoy,
@@ -80,6 +81,7 @@ const navGroups: NavGroup[] = [
   {
     groupName: "기관",
     items: [
+      { href: "/admin/beta-program", label: "베타 파일럿 관제", icon: Flag, badge: "🚩" },
       { href: "/training", label: "직원 교육 모드", icon: GraduationCap, badge: "🎓" },
       { href: "/feedback", label: "현장 피드백", icon: MessageSquare, badge: "💬" },
       { href: "/admin", label: "SaaS 슈퍼어드민", icon: ShieldCheck, badge: "👑" },
