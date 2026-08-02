@@ -17,38 +17,47 @@ export default function SuperAdminBetaChecklistPage() {
 
   const categories = [
     {
-      title: "1. 초기 기관 설정",
+      title: "Step 1. 기관 준비 (Preparation)",
       items: [
-        { id: 101, label: "기관 정보 등록 (명칭, 사업자번호, 대표전화)" },
-        { id: 102, label: "시설장 관리자 계정 생성 완료" },
-        { id: 103, label: "직원 초대 및 이메일 발송 완료" },
-        { id: 104, label: "직종별 권한 검증 완료 (Manager/SocialWorker/Nurse)" }
+        { id: 101, label: "계약 완료 및 대표 기관 정보 등록 (명칭, 사업자번호, 대표전화)" },
+        { id: 102, label: "시설장 대표 관리자 계정 생성 완료" },
+        { id: 103, label: "운영 담당자 지정 및 RLS 테넌트 생성 확인" }
       ]
     },
     {
-      title: "2. 데이터 이관 준비",
+      title: "Step 2. 데이터 준비 (Data Onboarding)",
       items: [
-        { id: 201, label: "어르신 이용자 35명 명부 CSV 일괄 업로드 완료" },
-        { id: 202, label: "보호자 연락처 및 긴급 비상망 등록" },
-        { id: 203, label: "송영 차량 (1호차, 2호차) 운행 코스 등록" },
-        { id: 204, label: "월간/주간 프로그램 일정표 세팅" }
+        { id: 201, label: "어르신 이용자 35명 명부 CSV 확보 및 일괄 이관 완료" },
+        { id: 202, label: "센터 직원 명단 및 직종별 역할 정보 확보" },
+        { id: 203, label: "보호자 연락처 및 긴급 비상 연락망 등록" },
+        { id: 204, label: "송영 차량 (1호차, 2호차) 운행 코스 등록" }
       ]
     },
     {
-      title: "3. AI 문서 및 결재 테스트",
+      title: "Step 3. 시스템 설정 (System Configuration)",
       items: [
-        { id: 301, label: "오늘의 케어 1-Tap 터치 관찰 기록 접수" },
-        { id: 302, label: "20종 AI 문서 레지스트리 자동 생성 검증" },
-        { id: 303, label: "전자 결재 서명 및 승인 프로세스 검증" },
-        { id: 304, label: "급여제공기록지 5종 PDF/출력 인쇄 테스트" }
+        { id: 301, label: "직원 계정 생성 및 초대 메일 발송 완료" },
+        { id: 302, label: "직종별 역할 권한 확인 (Manager/SocialWorker/Nurse/Caregiver)" },
+        { id: 303, label: "20종 AI 문서 템플릿 레지스트리 정상 세팅" },
+        { id: 304, label: "카카오 알림톡 및 시스템 알림 채널 설정" }
       ]
     },
     {
-      title: "4. 실전 운영 준비",
+      title: "Step 4. 교육 (Training)",
       items: [
-        { id: 401, label: "전 종사자 현장 10분 교육 완료" },
-        { id: 402, label: "어르신 개인정보 처리 동의서 확보" },
-        { id: 403, label: "SaaS 운영자 직통 핫라인 지원 채널 확보" }
+        { id: 401, label: "시설장 교육 완료 (대시보드/리스크센터/결재/직원관리)" },
+        { id: 402, label: "사회복지사 교육 완료 (이용자관리/케어기록/AI문서/보호자소통)" },
+        { id: 403, label: "사무원 교육 완료 (계약서/수납/근태관리)" },
+        { id: 404, label: "현장 요양보호사/간호사 교육 완료 (모바일 1-Tap/인수인계)" }
+      ]
+    },
+    {
+      title: "Step 5. 운영 시작 (Live Operations)",
+      items: [
+        { id: 501, label: "오늘의 케어 첫 관찰 팩트 접수 및 작성 완료" },
+        { id: 502, label: "현장 인수인계 ➔ 간호/복지팀 첫 협업 업무 요청 생성" },
+        { id: 503, label: "20종 AI 문서 자동 작성 첫 테스트 완료" },
+        { id: 504, label: "시설장 최종 전자 결재 서명 및 5종 PDF 출력 완료" }
       ]
     }
   ];
@@ -63,7 +72,7 @@ export default function SuperAdminBetaChecklistPage() {
   }
 
   const currentCompleted = orgChecklists[activeOrg] || [];
-  const totalCount = 15;
+  const totalCount = categories.reduce((acc, cat) => acc + cat.items.length, 0);
   const progressPercent = Math.round((currentCompleted.length / totalCount) * 100);
 
   return (

@@ -6,13 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Award,
+  BarChart3,
   Building2,
   Calendar,
   CheckSquare,
   CreditCard,
   FileCheck,
   FileSpreadsheet,
+  GraduationCap,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   MessageSquare,
   PieChart,
@@ -77,7 +80,11 @@ const navGroups: NavGroup[] = [
   {
     groupName: "기관",
     items: [
+      { href: "/training", label: "직원 교육 모드", icon: GraduationCap, badge: "🎓" },
+      { href: "/feedback", label: "현장 피드백", icon: MessageSquare, badge: "💬" },
       { href: "/admin", label: "SaaS 슈퍼어드민", icon: ShieldCheck, badge: "👑" },
+      { href: "/admin/beta-report", label: "베타 분석 리포트", icon: BarChart3 },
+      { href: "/admin/support", label: "고객 지원 센터", icon: LifeBuoy },
       { href: "/staff/invite", label: "직원 초대", icon: UserPlus, badge: "✉️" },
       { href: "/onboarding", label: "기관 온보딩", icon: Building2 },
       { href: "/staff", label: "직원·근무", icon: UserCheck },
