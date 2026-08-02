@@ -4,14 +4,20 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import PracticeTimelineView from "@/components/erp/PracticeTimelineView";
+import PracticeGuidanceCard from "@/components/erp/PracticeGuidanceCard";
+import { SocialWorkReminderEngine } from "@/lib/social-work-reminder-engine";
 
-type SubTabKey = "cases" | "assessment" | "plans" | "monitoring" | "evaluations" | "conferences";
+type SubTabKey = "cases" | "timeline" | "assessment" | "plans" | "monitoring" | "evaluations" | "conferences";
 
 export default function CaseManagementPage() {
   const [activeTab, setActiveTab] = useState<SubTabKey>("cases");
 
+  const reminder = SocialWorkReminderEngine.getCounselingReminder("강태호");
+
   const subtabs: { key: SubTabKey; label: string }[] = [
     { key: "cases", label: "📋 사례 목록" },
+    { key: "timeline", label: "🧭 실천 타임라인 (Practice Timeline)" },
     { key: "assessment", label: "🩺 사정평가 (욕구·낙상·욕창·CIST)" },
     { key: "plans", label: "📝 서비스계획 (Care Plan)" },
     { key: "monitoring", label: "🔍 모니터링" },
@@ -35,7 +41,10 @@ export default function CaseManagementPage() {
         </Button>
       </div>
 
-      {/* 6 Sub Tabs */}
+      {/* Non-intrusive Social Work Practice Guidance Card */}
+      <PracticeGuidanceCard reminder={reminder} />
+
+      {/* Sub Tabs */}
       <div className="flex overflow-x-auto gap-2 border-b border-slate-200 pb-2">
         {subtabs.map((t) => (
           <button
@@ -51,6 +60,10 @@ export default function CaseManagementPage() {
 
       {/* Main Content Area */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-6">
+        {activeTab === "timeline" && (
+          <PracticeTimelineView residentName="강태호" />
+        )}
+
         {activeTab === "cases" && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">

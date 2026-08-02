@@ -5,12 +5,20 @@ import { CheckCircle2, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mockResidents, Resident } from "@/data/mock-daycare-store";
+import PracticeGuidanceCard from "@/components/erp/PracticeGuidanceCard";
+import { SocialWorkReminderEngine } from "@/lib/social-work-reminder-engine";
 
 export default function DailyCarePage() {
   const [residents, setResidents] = useState<Resident[]>(mockResidents);
   const [activeTab, setActiveTab] = useState<"quick" | "vitals" | "meds" | "exceptions">("quick");
   const [expandedId, setExpandedId] = useState<string | null>("res-01");
   const [message, setMessage] = useState("");
+
+  const unusualReminder = SocialWorkReminderEngine.getUnusualRecordReminder(
+    "김순자",
+    "식사/케어",
+    "점심 식사 섭취량 둔화 및 물 섭취 권유 관찰됨"
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem("silvercare.dailyCare");
@@ -74,6 +82,9 @@ export default function DailyCarePage() {
       </div>
 
       {message && <div className="rounded-lg bg-sky-50 border border-sky-200 p-3 text-xs font-bold text-sky-800">{message}</div>}
+
+      {/* Non-intrusive Social Work Practice Guidance Card */}
+      <PracticeGuidanceCard reminder={unusualReminder} />
 
       {/* Sub Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-2">

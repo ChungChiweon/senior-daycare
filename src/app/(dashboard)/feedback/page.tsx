@@ -174,14 +174,14 @@ export default function BetaFeedbackPage() {
       {/* Tab Navigation */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <Button
-          variant={activeTab === "feedback" ? "default" : "secondary"}
+          variant={activeTab === "feedback" ? "primary" : "secondary"}
           onClick={() => setActiveTab("feedback")}
           className="font-bold text-xs h-8 px-3"
         >
           💬 현장 피드백 접수 ({feedbacks.length}건)
         </Button>
         <Button
-          variant={activeTab === "interview" ? "default" : "secondary"}
+          variant={activeTab === "interview" ? "primary" : "secondary"}
           onClick={() => setActiveTab("interview")}
           className="font-bold text-xs h-8 px-3"
         >
