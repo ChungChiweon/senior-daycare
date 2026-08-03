@@ -4,6 +4,7 @@ import { SidebarV2 } from "@/components/layout/sidebar-v2";
 import { GlobalErpSearch } from "@/components/erp/GlobalErpSearch";
 import { ErpBreadcrumb } from "@/components/layout/ErpBreadcrumb";
 import { BetaUserAccountSwitcher } from "@/components/erp/BetaUserAccountSwitcher";
+import PersonalAssistantPanel from "@/components/erp/PersonalAssistantPanel";
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -29,6 +30,7 @@ export function AppShell({ children }: PropsWithChildren) {
           {children}
         </main>
       </div>
+      <PersonalAssistantPanel />
       <MobileBottomSheet />
     </div>
   );
