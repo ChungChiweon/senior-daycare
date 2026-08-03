@@ -1,16 +1,26 @@
 export type PreparedItemStatus = "prepared" | "reviewed" | "accepted" | "dismissed";
 
+export type AssistantSourceType =
+  | "daily_record_block"
+  | "case_conference_decision"
+  | "counseling_raw_log"
+  | "handover_fact";
+
 export type AssistantPreparedItem = {
   id: string;
   user_id: string;
+  organization_id: string;
+  source_type: AssistantSourceType;
+  source_record_ids: string[]; // 필수: 출처 팩트 ID
+  source_completeness: "complete" | "partial";
   type: "counseling_summary" | "conference_task_draft" | "monthly_doc_draft" | "handover_note";
-  source_record_ids: string[];
   title: string;
   prepared_content: string;
   requires_human_decision: boolean;
   status: PreparedItemStatus;
   created_at: string;
   expires_at?: string;
+  is_demo_fallback?: boolean;
 };
 
 export type AssistantPreferences = {
@@ -27,6 +37,7 @@ export type PersonalAssistantContext = {
   user_name: string;
   organization_id: string;
   role: string;
+  assigned_residents_count: number;
   today_tasks: { id: string; title: string; due: string; done: boolean }[];
   pending_approvals: number;
   upcoming_reviews: number;
@@ -35,4 +46,5 @@ export type PersonalAssistantContext = {
   frequently_used_documents: string[];
   prepared_items: AssistantPreparedItem[];
   assistant_preferences: AssistantPreferences;
+  is_fallback_mode?: boolean;
 };
