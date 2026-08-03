@@ -44,3 +44,53 @@ export type PracticeReflection = {
   worker_response?: string;
   created_at: string;
 };
+
+export type IntakeData = {
+  id: string;
+  resident_name: string;
+  gender: string;
+  birth_date: string;
+  care_level: string;
+  initial_counseling: string;
+  guardian_opinion: string;
+  main_needs: string;
+  risk_caution_facts: string;
+  initial_goals: string;
+  assigned_worker: string;
+  status: "draft" | "completed";
+  created_at: string;
+};
+
+export type CaseConferenceRecord = {
+  id: string;
+  resident_name: string;
+  conference_date: string;
+  discussed_facts: string;
+  attendees: string[];
+  worker_judgment: string;
+  decisions: string[];
+  assignee: string;
+  due_date: string;
+  reflect_in_service_plan: boolean;
+  share_with_guardian: boolean;
+  followup_review_date: string;
+  status: "pending" | "in_progress" | "completed";
+  task_id?: string;
+};
+
+export type ReAssessmentDiff = {
+  id: string;
+  resident_id: string;
+  resident_name: string;
+  previous_assessment: NeedsAssessment;
+  current_assessment: NeedsAssessment;
+  differences: {
+    category: string;
+    prev_text: string;
+    curr_text: string;
+    is_changed: boolean;
+  }[];
+  ai_fact_summary: string; // AI는 오직 차이만 요약 (개선/악화 자동판정 절대 금지)
+  worker_interpretation: string;
+  plan_review_needed: boolean;
+};
