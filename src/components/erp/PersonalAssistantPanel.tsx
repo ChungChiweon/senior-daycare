@@ -24,6 +24,7 @@ import {
   PersonalAssistantEngine,
   SIMULATED_PERFORMANCE_METRICS
 } from "@/lib/personal-assistant-engine";
+import { FeatureKillSwitchStore, type AiFeatureKey } from "@/lib/feature-kill-switch";
 import type { AssistantPreparedItem, PersonalAssistantContext } from "@/types/personal-assistant";
 
 export default function PersonalAssistantPanel() {
@@ -276,6 +277,33 @@ export default function PersonalAssistantPanel() {
 
               {/* Main Content Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                {/* Kill Switch Feature Check */}
+                {(() => {
+                  const tabToFeatureMap: Record<string, AiFeatureKey> = {
+                    today: "today_brief",
+                    drafts: "document_draft",
+                    replies: "consultation_summary",
+                    deadlines: "case_conference_preparation",
+                    eod: "end_of_day_summary"
+                  };
+                  const featureKey = tabToFeatureMap[activeTab];
+                  if (featureKey && !FeatureKillSwitchStore.isFeatureEnabled(context.organization_id, featureKey)) {
+                    return (
+                      <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs space-y-1">
+                        <div className="font-bold flex items-center gap-1 text-amber-800">
+                          <AlertTriangle size={16} />
+                          <span>기능 일시 비활성화 안내 (Kill Switch 차단)</span>
+                        </div>
+                        <p className="text-[11px] text-amber-800 leading-relaxed">
+                          이 AI 기능(&apos;{featureKey}&apos;)은 기관 관리자 설정에 의해 일시 비활성화되어 있습니다.
+                          기존 ERP 화면에서 직접 업무를 100% 수동 완료하실 수 있습니다.
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {actionMessage && (
                   <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs rounded-lg flex items-center gap-2">
                     <CheckCircle2 size={16} />
