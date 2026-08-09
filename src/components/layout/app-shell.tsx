@@ -18,6 +18,11 @@ export function AppShell({ children }: PropsWithChildren) {
                 <GlobalErpSearch />
               </div>
               <div className="flex items-center gap-3">
+                {process.env.NEXT_PUBLIC_APP_ENV === "staging" && (
+                  <span className="px-2 py-0.5 text-[10px] font-black tracking-wider bg-amber-500/10 text-amber-600 border border-amber-500/30 rounded-md">
+                    STAGING
+                  </span>
+                )}
                 <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                   <span className="text-emerald-700">행복주간보호 ERP 가동 중</span>
