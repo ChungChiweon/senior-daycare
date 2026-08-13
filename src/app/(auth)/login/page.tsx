@@ -92,6 +92,54 @@ export default function LoginPage() {
           </Button>
         </form>
 
+        {/* 1-Click Quick Beta Account Login for Social Workers A, B, C */}
+        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+          <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold">
+            <span>⚡ 실습용 1-Click 빠른 로그인</span>
+            <span className="text-amber-400">비번 입력 불필요</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem("silvercare.activeStaffId", "staff-sw-a");
+                localStorage.setItem("silvercare.activeRole", "social_worker");
+                router.push("/dashboard");
+              }}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-sky-500 hover:bg-slate-800/80 text-left transition space-y-0.5"
+            >
+              <div className="font-black text-white text-[11px]">사회복지사 A</div>
+              <div className="text-[9px] text-sky-400 font-medium">선임 / beta-sw-a</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem("silvercare.activeStaffId", "staff-sw-b");
+                localStorage.setItem("silvercare.activeRole", "social_worker");
+                router.push("/dashboard");
+              }}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-sky-500 hover:bg-slate-800/80 text-left transition space-y-0.5"
+            >
+              <div className="font-black text-white text-[11px]">사회복지사 B</div>
+              <div className="text-[9px] text-sky-400 font-medium">주임 / beta-sw-b</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem("silvercare.activeStaffId", "staff-sw-c");
+                localStorage.setItem("silvercare.activeRole", "social_worker");
+                router.push("/dashboard");
+              }}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-sky-500 hover:bg-slate-800/80 text-left transition space-y-0.5"
+            >
+              <div className="font-black text-white text-[11px]">사회복지사 C</div>
+              <div className="text-[9px] text-sky-400 font-medium">신임 / beta-sw-c</div>
+            </button>
+          </div>
+        </div>
+
         <div className="border-t border-slate-800 pt-4 text-center space-y-2 text-[11px]">
           <span className="text-slate-500 font-medium">아직 등록된 센터 계정이 없으신가요?</span>
           <div>
