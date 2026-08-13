@@ -27,8 +27,20 @@ export function GlobalErpSearch() {
     if (!query.trim()) return null;
     const q = query.trim().toLowerCase();
 
-    // 1. Search Residents & Guardians
-    const residents = mockResidents.filter(
+    // 1. Search Residents & Guardians from user registered state
+    let registeredResidents: typeof mockResidents = [];
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("silvercare.residents");
+      if (raw) {
+        try {
+          registeredResidents = JSON.parse(raw);
+        } catch {
+          registeredResidents = [];
+        }
+      }
+    }
+
+    const residents = registeredResidents.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
         r.guardianName.toLowerCase().includes(q) ||
@@ -43,19 +55,11 @@ export function GlobalErpSearch() {
         (t.residentName && t.residentName.toLowerCase().includes(q))
     );
 
-    // 3. Search Documents
-    const docs = [
-      { id: "doc-1", title: "1. 보호자 일일 알림장 (김순자 어르신)", category: "보호자 소통", date: "2026-08-01" },
-      { id: "doc-2", title: "6. 장기요양급여 제공기록 문안", category: "내부 서식", date: "2026-08-01" },
-      { id: "doc-3", title: "8. 건강·투약·바이탈 보고서 (박영수 어르신)", category: "간호 서식", date: "2026-08-01" }
-    ].filter((d) => d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q));
+    // 3. Search Documents (user generated)
+    const docs: { id: string; title: string; category: string; date: string }[] = [];
 
     // 4. Search RecordBlocks
-    const blocks = [
-      { id: "blk-001", title: "출결 및 송영 1호차 안전 탑승 사실", resident: "김순자 어르신" },
-      { id: "blk-002", title: "혈압 120/80 mmHg, 혈당 110 mg/dL 정상 측정", resident: "김순자 어르신" },
-      { id: "blk-004", title: "점심 신규 당뇨약 정량 복용 완료", resident: "박영수 어르신" }
-    ].filter((b) => b.title.toLowerCase().includes(q) || b.resident.toLowerCase().includes(q));
+    const blocks: { id: string; title: string; resident: string }[] = [];
 
     return { residents, tasks, docs, blocks };
   }, [query]);

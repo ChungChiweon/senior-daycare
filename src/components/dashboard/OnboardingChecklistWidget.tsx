@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 
 export function OnboardingChecklistWidget() {
-  const [completedSteps, setCompletedSteps] = useState<number[]>([1, 2, 3]);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([1]);
 
   const steps = [
-    { id: 1, label: "기관 정보 등록", desc: "센터 대표 명칭 및 정원 등록 완료", href: "/onboarding" },
-    { id: 2, label: "직원 초대 및 권한 설정", desc: "복지사/간호사/요양보호사 초청 완료", href: "/staff/invite" },
-    { id: 3, label: "이용자 수급자 등록", desc: "35명 어르신 프로필 및 송영 등록 완료", href: "/residents" },
+    { id: 1, label: "기관 계정 확인", desc: "주간보호센터 베타 기관 설정", href: "/onboarding" },
+    { id: 2, label: "복지사 실습 계정", desc: "사회복지사 A, B, C 준비", href: "/staff/invite" },
+    { id: 3, label: "가상 이용자 등록", desc: "테스트용 가상 이용자 직접 등록", href: "/residents" },
     { id: 4, label: "첫 관찰 케어 기록 작성", desc: "오늘의 케어 1-Tap 터치 관찰 접수", href: "/daily-care" },
-    { id: 5, label: "AI 20종 문서 동적 생성 테스트", desc: "레지스트리 20종 AI 문서 자동 작성", href: "/create" }
+    { id: 5, label: "개인 AI 비서 실습", desc: "초안 검토 및 퇴근 전 요약", href: "/create" }
   ];
 
   const progressPercent = Math.round((completedSteps.length / steps.length) * 100);

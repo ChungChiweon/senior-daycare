@@ -76,7 +76,7 @@ export default function CaseManagementPage() {
   const [activeTab, setActiveTab] = useState<SubTabKey>("cases");
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const [intakeList, setIntakeList] = useState<IntakeData[]>([]);
-  const [conferences, setConferences] = useState<CaseConferenceRecord[]>(MOCK_CONFERENCES);
+  const [conferences, setConferences] = useState<CaseConferenceRecord[]>([]);
   const [createdTaskMessage, setCreatedTaskMessage] = useState("");
 
   // Conference 2-Field Form state
@@ -241,38 +241,49 @@ export default function CaseManagementPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
                 <span className="text-xs font-bold text-slate-400">진행 중 사례</span>
-                <div className="text-2xl font-black text-slate-900 mt-1">6건</div>
+                <div className="text-2xl font-black text-slate-900 mt-1">{intakeList.length + conferences.length}건</div>
               </div>
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
                 <span className="text-xs font-bold text-slate-400">이번달 신규 사례</span>
-                <div className="text-2xl font-black text-sky-600 mt-1">2건</div>
+                <div className="text-2xl font-black text-sky-600 mt-1">{intakeList.length}건</div>
               </div>
               <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
                 <span className="text-xs font-bold text-slate-400">종결된 사례</span>
-                <div className="text-2xl font-black text-emerald-600 mt-1">1건</div>
+                <div className="text-2xl font-black text-emerald-600 mt-1">0건</div>
               </div>
             </div>
 
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                <tr>
-                  <th className="p-3">어르신</th>
-                  <th className="p-3">사례 유형</th>
-                  <th className="p-3">담당 사회복지사</th>
-                  <th className="p-3">상태</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-semibold text-slate-800">
-                <tr>
-                  <td className="p-3 font-bold">강태호 어르신</td>
-                  <td className="p-3">건강 악화 및 혈압 상승 대응</td>
-                  <td className="p-3">박지영</td>
-                  <td className="p-3">
-                    <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-sky-800 font-bold">진행중</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {intakeList.length === 0 && conferences.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed text-xs space-y-1">
+                <p className="font-bold text-slate-600">아직 등록된 사례관리 이력이 없습니다.</p>
+                <p className="text-[11px] text-slate-400">
+                  신규 이용자 빠른 등록을 통해 인테이크를 입력하시면 사례 목록이 생성됩니다.
+                </p>
+              </div>
+            ) : (
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                  <tr>
+                    <th className="p-3">어르신</th>
+                    <th className="p-3">사례 유형</th>
+                    <th className="p-3">담당 사회복지사</th>
+                    <th className="p-3">상태</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-semibold text-slate-800">
+                  {intakeList.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="p-3 font-bold">{item.resident_name || "가상 이용자"} 어르신</td>
+                      <td className="p-3">초기 인테이크 및 욕구 사정</td>
+                      <td className="p-3">{item.assigned_worker || "사회복지사"}</td>
+                      <td className="p-3">
+                        <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-sky-800 font-bold">진행중</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -281,12 +292,8 @@ export default function CaseManagementPage() {
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               어르신 사정평가 (욕구·낙상·욕창·CIST)
             </h2>
-            <div className="p-4 border border-slate-200 rounded-xl space-y-2">
-              <div className="flex justify-between font-bold text-slate-900">
-                <span>김순자 어르신 (재사정)</span>
-                <span className="text-slate-400">2026-07-15</span>
-              </div>
-              <div className="text-slate-600">낙상위험: 중위험(8점) | CIST: 22점(경도인지)</div>
+            <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
+              아직 등록된 정기 사정평가가 없습니다. 이용자 등록 후 사정평가를 작성해주세요.
             </div>
           </div>
         )}
@@ -296,9 +303,8 @@ export default function CaseManagementPage() {
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               개별 급여제공계획 (Care Plan)
             </h2>
-            <div className="p-4 bg-sky-50 border border-sky-200 rounded-xl text-sky-900 font-semibold space-y-2">
-              <div className="font-bold text-sm">윤복순 어르신 낙상 예방 케어플랜</div>
-              <p>주 3회 하체 근력 체조, 이동 시 1대1 조력</p>
+            <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
+              아직 등록된 급여제공계획서가 없습니다.
             </div>
           </div>
         )}
