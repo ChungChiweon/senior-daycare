@@ -318,29 +318,36 @@ export default function PersonalAssistantPanel() {
                       <span>오늘의 우선순위 정리 (기한 순)</span>
                       <span className="text-[10px]">기한/상태 기준 정렬</span>
                     </div>
-                    <div className="space-y-2">
-                      {context.today_tasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className={`p-3 rounded-xl border transition flex items-start gap-2.5 ${
-                            task.done ? "bg-slate-50 border-slate-200 text-slate-400" : "bg-white border-slate-200 shadow-2xs"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={task.done}
-                            readOnly
-                            className="mt-0.5 rounded text-sky-600 focus:ring-sky-500"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <span className={`font-bold block text-xs ${task.done ? "line-through" : "text-slate-900"}`}>
-                              {task.title}
-                            </span>
-                            <span className="text-[10px] text-slate-400">마감: {task.due}</span>
+                    {context.today_tasks.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed text-xs space-y-1">
+                        <p className="font-bold text-slate-600">아직 오늘 등록된 업무가 없습니다.</p>
+                        <p className="text-[11px] text-slate-400">새로운 업무나 인테이크를 진행하면 비서가 일정을 챙겨드립니다.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {context.today_tasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className={`p-3 rounded-xl border transition flex items-start gap-2.5 ${
+                              task.done ? "bg-slate-50 border-slate-200 text-slate-400" : "bg-white border-slate-200 shadow-2xs"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={task.done}
+                              readOnly
+                              className="mt-0.5 rounded text-sky-600 focus:ring-sky-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <span className={`font-bold block text-xs ${task.done ? "line-through" : "text-slate-900"}`}>
+                                {task.title}
+                              </span>
+                              <span className="text-[10px] text-slate-400">마감: {task.due}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -353,8 +360,9 @@ export default function PersonalAssistantPanel() {
                     </div>
 
                     {preparedItems.filter((i) => i.status === "prepared").length === 0 ? (
-                      <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
-                        현재 검토 대기 중인 초안이 없습니다.
+                      <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed text-xs space-y-1">
+                        <p className="font-bold text-slate-600">상담 준비에 사용할 기록이 없습니다.</p>
+                        <p className="text-[11px] text-slate-400">먼저 이용자 관찰 기록을 입력하면 비서가 요약 및 초안을 준비합니다.</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -397,14 +405,21 @@ export default function PersonalAssistantPanel() {
                 {/* TAB 3: Awaiting Reply */}
                 {activeTab === "replies" && (
                   <div className="space-y-3">
-                    <span className="text-slate-500 font-bold block">보호자 및 외부 회신 필요 (3건)</span>
-                    <div className="p-3 border rounded-xl bg-white space-y-1">
-                      <div className="flex justify-between font-bold text-slate-900">
-                        <span>김순자 어르신 자녀 안부 전화 회신</span>
-                        <span className="text-amber-600 font-bold">대기중</span>
+                    <span className="text-slate-500 font-bold block">보호자 및 외부 회신 필요</span>
+                    {context.unanswered_communications === 0 ? (
+                      <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed text-xs space-y-1">
+                        <p className="font-bold text-slate-600">회신 대기 중인 보호자 소통 요청이 없습니다.</p>
+                        <p className="text-[11px] text-slate-400">보호자 상담 및 요청이 등록되면 비서가 알려드립니다.</p>
                       </div>
-                      <p className="text-slate-600 text-[11px]">오후 프로그램 참여 모습 및 주말약 대조건 회신 요구</p>
-                    </div>
+                    ) : (
+                      <div className="p-3 border rounded-xl bg-white space-y-1">
+                        <div className="flex justify-between font-bold text-slate-900">
+                          <span>보호자 안부 및 문의 회신 대기</span>
+                          <span className="text-amber-600 font-bold">대기중</span>
+                        </div>
+                        <p className="text-slate-600 text-[11px]">보호자 요청 사항 확인 및 회신 필요</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -412,13 +427,20 @@ export default function PersonalAssistantPanel() {
                 {activeTab === "deadlines" && (
                   <div className="space-y-3">
                     <span className="text-slate-500 font-bold block">마감 및 결재 예정 항목</span>
-                    <div className="p-3 border rounded-xl bg-white space-y-1">
-                      <div className="flex justify-between font-bold text-slate-900">
-                        <span>2026년 3분기 욕구사정 결재</span>
-                        <span className="text-sky-600 font-bold">결재 2건 대기</span>
+                    {context.pending_approvals === 0 ? (
+                      <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed text-xs space-y-1">
+                        <p className="font-bold text-slate-600">임박한 마감 또는 결재 요청 건이 없습니다.</p>
+                        <p className="text-[11px] text-slate-400">정기 재사정이나 승인 대기 문서가 발생하면 표시됩니다.</p>
                       </div>
-                      <p className="text-slate-600 text-[11px]">시설장 최종 승인 대기 중인 서식</p>
-                    </div>
+                    ) : (
+                      <div className="p-3 border rounded-xl bg-white space-y-1">
+                        <div className="flex justify-between font-bold text-slate-900">
+                          <span>결재 승인 대기 서식</span>
+                          <span className="text-sky-600 font-bold">{context.pending_approvals}건 대기</span>
+                        </div>
+                        <p className="text-slate-600 text-[11px]">시설장 최종 승인 대기 중인 서식</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -430,9 +452,14 @@ export default function PersonalAssistantPanel() {
                         <Moon size={16} className="text-indigo-400" /> 오늘 하루 퇴근 전 업무 요약
                       </h4>
                       <div className="space-y-1 text-slate-300 text-[11px]">
-                        <p>• 오늘 완료 업무: 케어기록 {context.recent_records_count}건, 재사정 1건</p>
-                        <p>• 미완료 업무: 보호자 안부전화 1건 (내일 오전 확인)</p>
-                        <p>• 내일 주요 일정: 다학제 사례회의 14:00 예정</p>
+                        {context.recent_records_count === 0 && context.today_tasks.length === 0 ? (
+                          <p className="text-slate-400">오늘 작성된 업무 및 케어 기록이 없습니다. 기록을 직접 입력하시면 퇴근 전 인수인계 요약이 자동으로 정리됩니다.</p>
+                        ) : (
+                          <>
+                            <p>• 오늘 완료 업무: 케어기록 {context.recent_records_count}건, 과제 {context.today_tasks.filter(t => t.done).length}건 완료</p>
+                            <p>• 미완료 업무: {context.today_tasks.filter(t => !t.done).length}건 대기 중</p>
+                          </>
+                        )}
                       </div>
                     </div>
 
