@@ -190,7 +190,7 @@ function writeStorage<T>(key: string, value: T): void {
 
 export class LocalTaskRepository {
   getTasks(): ErpTask[] {
-    return readStorage<ErpTask[]>(STORAGE_KEY, MOCK_INITIAL_TASKS);
+    return readStorage<ErpTask[]>(STORAGE_KEY, []);
   }
 
   saveTask(task: ErpTask): void {

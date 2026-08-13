@@ -255,34 +255,40 @@ export function TaskCollaborationStudio() {
 
           {/* Task Items Feed */}
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-            {filteredTasks.map((t) => {
-              const isSelected = t.requestId === selectedTaskId;
-              return (
-                <div
-                  key={t.requestId}
-                  onClick={() => setSelectedTaskId(t.requestId)}
-                  className={`rounded-xl border p-3 cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-sky-500 bg-sky-50/50 shadow-sm"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-slate-400 font-bold">{t.requestId}</span>
-                    {getStatusBadge(t.status)}
+            {filteredTasks.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
+                등록된 협업 업무가 없습니다.
+              </div>
+            ) : (
+              filteredTasks.map((t) => {
+                const isSelected = t.requestId === selectedTaskId;
+                return (
+                  <div
+                    key={t.requestId}
+                    onClick={() => setSelectedTaskId(t.requestId)}
+                    className={`rounded-xl border p-3 cursor-pointer transition-all ${
+                      isSelected
+                        ? "border-sky-500 bg-sky-50/50 shadow-sm"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-slate-400 font-bold">{t.requestId}</span>
+                      {getStatusBadge(t.status)}
+                    </div>
+                    <h4 className="font-extrabold text-slate-900 text-xs leading-snug line-clamp-2">
+                      {t.title}
+                    </h4>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 border-t border-slate-100 pt-1.5 font-medium">
+                      <span>담당: <strong className="text-slate-800">{t.assigneeName}</strong></span>
+                      {t.residentName && (
+                        <span className="text-sky-700 font-bold">👤 {t.residentName} 어르신</span>
+                      )}
+                    </div>
                   </div>
-                  <h4 className="font-extrabold text-slate-900 text-xs leading-snug line-clamp-2">
-                    {t.title}
-                  </h4>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 border-t border-slate-100 pt-1.5 font-medium">
-                    <span>담당: <strong className="text-slate-800">{t.assigneeName}</strong></span>
-                    {t.residentName && (
-                      <span className="text-sky-700 font-bold">👤 {t.residentName} 어르신</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -397,14 +403,10 @@ export function TaskCollaborationStudio() {
               </div>
             </div>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-slate-400">
-            선택된 업무가 없습니다.
-          </div>
-        )}
+        ) : null}
 
         {/* 3. RIGHT COLUMN: Context & Related Entities */}
-        {selectedTask && (
+        {selectedTask ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4 shadow-2xs">
             <span className="font-extrabold text-slate-900 text-xs block border-b border-slate-100 pb-2">
               🔗 관련 맥락 정보 (Context)
@@ -462,6 +464,18 @@ export function TaskCollaborationStudio() {
                 ))}
               </div>
             </div>
+          </div>
+        ) : null}
+
+        {!selectedTask && (
+          <div className="col-span-2 rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600 mb-1">
+              <CheckCircle2 size={28} />
+            </div>
+            <h3 className="text-base font-black text-slate-900">선택되거나 등록된 협업 업무가 없습니다.</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              상단 [+ 신규 협업 요청 생성] 버튼을 눌러 테스트용 업무 요청을 등록해보세요.
+            </p>
           </div>
         )}
       </div>

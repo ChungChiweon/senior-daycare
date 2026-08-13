@@ -6,35 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default function DocumentsPage() {
-  const docList = [
-    {
-      id: "doc-01",
-      title: "2026년 7월 30일 장기요양 급여제공기록지",
-      category: "급여제공기록지",
-      date: "2026-07-30",
-      author: "사회복지팀",
-      status: "검토대기",
-      count: "입실 12명 전원 연동"
-    },
-    {
-      id: "doc-02",
-      title: "2026년 7월분 장기요양 본인부담금 명세서 및 청구서",
-      category: "청구서식",
-      date: "2026-07-29",
-      author: "행정실",
-      status: "승인완료",
-      count: "28명 전원 출력가능"
-    },
-    {
-      id: "doc-03",
-      title: "3분기 어르신 욕구평가 종합 기록부",
-      category: "사례관리",
-      date: "2026-07-25",
-      author: "사회복지사 박지영",
-      status: "승인완료",
-      count: "공단 평가제출용"
-    }
-  ];
+  const docList: any[] = [];
 
   return (
     <div className="space-y-6">
@@ -51,32 +23,41 @@ export default function DocumentsPage() {
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {docList.map((d) => (
-          <Link
-            key={d.id}
-            href={`/documents/${d.id}`}
-            className="group rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-500 hover:shadow-md block"
-          >
-            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 font-bold text-sky-800">
-                  <FileSpreadsheet size={20} />
+      {docList.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <h3 className="text-base font-black text-slate-900">생성된 문서 서식이 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            통합 문서 AI 메뉴에서 일일 케어 또는 가정통신문 등의 문서를 생성하면 자동으로 보관됩니다.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {docList.map((d) => (
+            <Link
+              key={d.id}
+              href={`/documents/${d.id}`}
+              className="group rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-500 hover:shadow-md block"
+            >
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 font-bold text-sky-800">
+                    <FileSpreadsheet size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 group-hover:text-sky-600">{d.title}</h2>
+                    <p className="text-xs text-slate-500">
+                      분류: {d.category} | 작성: {d.author} | 작성일: {d.date}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-base font-bold text-slate-900 group-hover:text-sky-600">{d.title}</h2>
-                  <p className="text-xs text-slate-500">
-                    분류: {d.category} | 작성: {d.author} | 작성일: {d.date}
-                  </p>
-                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${d.status === "승인완료" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                  {d.status}
+                </span>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${d.status === "승인완료" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                {d.status}
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

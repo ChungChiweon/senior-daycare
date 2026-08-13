@@ -55,65 +55,9 @@ export function OperationCalendarStudio() {
     setTasks(localTaskRepository.getTasks());
   }, []);
 
-  // Built Calendar Events merging static center schedule + dynamic ErpTask deadlines
+  // Built Calendar Events merging dynamic ErpTask deadlines
   const events: CalendarEvent[] = useMemo(() => {
-    const list: CalendarEvent[] = [
-      {
-        id: "cal-1",
-        type: "shuttle",
-        title: "1호차/2호차 아침 등원 송영 운행",
-        dateStr: "2026-08-01",
-        timeStr: "08:30 ~ 09:30",
-        assigneeName: "김운전 기사님",
-        statusLabel: "완료 (18명 등원)",
-        detailText: "강남/역삼 노선 18명 안전 탑승 및 체온 측정이 완료되었습니다."
-      },
-      {
-        id: "cal-2",
-        type: "program",
-        title: "오전 뇌자극 칠교 인지 재활 프로그램",
-        dateStr: "2026-08-01",
-        timeStr: "10:30 ~ 11:30",
-        assigneeName: "박지영 사회복지사",
-        residentName: "김순자 어르신 외 17명",
-        relatedDocTitle: "1. 보호자 일일 알림장",
-        statusLabel: "완료",
-        detailText: "어르신 집중도 높음. 프로그램 수행 사진 촬영 완료."
-      },
-      {
-        id: "cal-3",
-        type: "counseling",
-        title: "김순자 어르신 주보호자 내방 및 등급상담",
-        dateStr: "2026-08-01",
-        timeStr: "14:00 ~ 14:40",
-        assigneeName: "박지영 사회복지사",
-        residentName: "김순자 어르신",
-        statusLabel: "예정",
-        detailText: "가정 내 야간 보행 케어 및 무릎 온찜질 지원 관련 내방 상담."
-      },
-      {
-        id: "cal-4",
-        type: "compliance",
-        title: "건보공단 주간보호 소방안전대피 훈련 점검",
-        dateStr: "2026-08-01",
-        timeStr: "15:30 ~ 16:30",
-        assigneeName: "최사무 행정주임",
-        relatedDocTitle: "15. 시설 안전 및 대피 훈련 보고서",
-        statusLabel: "진행중",
-        detailText: "수급자 비상대피 참가자 명부 및 서명 확인 점검."
-      },
-      {
-        id: "cal-5",
-        type: "approval",
-        title: "7월 장기요양급여 제공기록지 센터장 전자 결재 마감",
-        dateStr: "2026-08-01",
-        timeStr: "17:00 마감",
-        assigneeName: "김철수 센터장",
-        relatedDocTitle: "6. 장기요양급여 제공기록 문안",
-        statusLabel: "결재대기 (3건)",
-        detailText: "18명 전체 수급자 제공기록지 최종 서명 및 공단 전송 준비."
-      }
-    ];
+    const list: CalendarEvent[] = [];
 
     // Merge tasks that have due dates
     tasks.forEach((t) => {

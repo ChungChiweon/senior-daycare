@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Calendar } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Calendar, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CommonActivityForm } from "@/components/content/CommonActivityForm";
@@ -44,33 +45,46 @@ export function UnifiedContentStudio() {
   const [currentDate, setCurrentDate] = useState(today);
 
   // Residents & Selected Store
-  const [residents] = useState<IntegratedResident[]>(BASE_RESIDENTS);
-  const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>(
-    BASE_RESIDENTS.filter((r) => r.attendanceStatus === "출석").map((r) => r.id)
-  );
-  const [activeResidentId, setActiveResidentId] = useState<string>("res-01");
+  const [residents, setResidents] = useState<IntegratedResident[]>([]);
+  const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
+  const [activeResidentId, setActiveResidentId] = useState<string>("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("silvercare.residents");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setResidents(
+            parsed.map((r: any) => ({
+              id: r.id,
+              name: r.name,
+              gender: (r.gender as any) || "여",
+              age: r.age || 80,
+              grade: (r.careGrade as any) || "3등급",
+              careNumber: r.careNumber || "L1234567890",
+              attendanceStatus: "출석",
+              group: "A그룹",
+              photoUrl: "",
+              hasPhotoConsent: true
+            }))
+          );
+          setSelectedResidentIds(parsed.map((r: any) => r.id));
+          setActiveResidentId(parsed[0].id);
+        }
+      } catch {
+        // fallback
+      }
+    }
+  }, []);
 
   // Activities & Care Data Store
-  const [commonActivities, setCommonActivities] = useState<CommonActivity[]>(MOCK_COMMON_ACTIVITIES);
-  const [individualResponses, setIndividualResponses] =
-    useState<Record<string, IndividualResponse>>(MOCK_INDIVIDUAL_RESPONSES);
-  const [individualCares, setIndividualCares] =
-    useState<Record<string, IndividualCare>>(MOCK_INDIVIDUAL_CARES);
+  const [commonActivities, setCommonActivities] = useState<CommonActivity[]>([]);
+  const [individualResponses, setIndividualResponses] = useState<Record<string, IndividualResponse>>({});
+  const [individualCares, setIndividualCares] = useState<Record<string, IndividualCare>>({});
 
   // Mobile Out-of-office Field Records
-  const [fieldRecords, setFieldRecords] = useState<FieldRecord[]>([
-    {
-      id: "field-init-1",
-      residentId: "res-01",
-      residentName: "김순자",
-      category: "병원동행",
-      timeStr: "14:15",
-      location: "행복종합병원 내과",
-      note: "혈압 및 당뇨 정기검진 동행 완료. 바이탈 수치 정상이며 처방약 복용 지도함.",
-      actionsTaken: "차량 수송 및 간호팀 수령약 전달 완료",
-      createdAt: new Date().toISOString()
-    }
-  ]);
+  const [fieldRecords, setFieldRecords] = useState<FieldRecord[]>([]);
 
   function handleSaveFieldRecord(newRecord: FieldRecord) {
     setFieldRecords((prev) => [newRecord, ...prev]);
@@ -79,7 +93,7 @@ export function UnifiedContentStudio() {
   }
 
   // RecordBlocks Store
-  const [recordBlocks, setRecordBlocks] = useState<RecordBlock[]>(MOCK_RECORD_BLOCKS);
+  const [recordBlocks, setRecordBlocks] = useState<RecordBlock[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("tpl_care_record_hwpx");
 
   // Mobile Step Wizard State (1~4)
@@ -87,8 +101,21 @@ export function UnifiedContentStudio() {
   const [notification, setNotification] = useState("");
   const [isBlockEditorOpen, setIsBlockEditorOpen] = useState<boolean>(false);
 
-  const activeResident = useMemo(() => {
-    return residents.find((r) => r.id === activeResidentId) || residents[0];
+  const activeResident = useMemo<IntegratedResident>(() => {
+    return (
+      residents.find((r) => r.id === activeResidentId) ||
+      residents[0] || {
+        id: "",
+        name: "미지정",
+        gender: "여",
+        age: 80,
+        grade: "3등급",
+        careNumber: "L1234567890",
+        attendanceStatus: "결석",
+        group: "A그룹",
+        hasPhotoConsent: true
+      }
+    );
   }, [residents, activeResidentId]);
 
   const activeCare = useMemo(() => {
@@ -231,6 +258,45 @@ export function UnifiedContentStudio() {
         }}
         onSwitchToDesktop={() => setIsMobileMode(false)}
       />
+    );
+  }
+
+  if (residents.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* Header Banner */}
+        <div className="rounded-2xl bg-gradient-to-r from-sky-900 via-indigo-900 to-slate-900 p-6 text-white shadow-lg space-y-3">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-sky-400/20 text-sky-200 border-sky-300/30 text-xs font-bold">
+              통합 사회복지 업무 스튜디오
+            </Badge>
+            <Badge className="bg-emerald-400/20 text-emerald-200 border-emerald-300/30 text-xs font-bold">
+              20종 문서 일괄 생성
+            </Badge>
+          </div>
+          <h1 className="mt-2 text-xl lg:text-2xl font-black text-white tracking-tight">
+            오늘 기록 한 번으로 <span className="text-sky-300 underline underline-offset-4 font-black">20종 문서</span>가 자동 작성됩니다.
+          </h1>
+          <p className="mt-1 text-xs text-sky-100 font-medium max-w-3xl leading-relaxed">
+            공통활동 및 이용자 사실을 입력하면 20종 문서가 바로 완성됩니다.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-4 shadow-xs">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600 mb-1">
+            <Users size={28} />
+          </div>
+          <h3 className="text-base font-black text-slate-900">등록된 이용자가 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            통합 문서 작성을 위해 먼저 [이용자 관리] 메뉴에서 가상 이용자(어르신)를 직접 등록해주세요.
+          </p>
+          <Link href="/residents">
+            <Button className="bg-sky-600 hover:bg-sky-700 font-bold text-xs">
+              + 가상 이용자 등록하러 가기
+            </Button>
+          </Link>
+        </div>
+      </div>
     );
   }
 

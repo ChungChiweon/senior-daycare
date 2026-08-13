@@ -1,15 +1,52 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockApprovals } from "@/data/mock-daycare-store";
 
 export default function ApprovalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const appr = mockApprovals.find((a) => a.id === resolvedParams.id) ?? mockApprovals[0];
-  const [status, setStatus] = useState(appr.status);
+  const [appr, setAppr] = useState<any>(null);
+  const [status, setStatus] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("silvercare.approvals");
+    if (saved) {
+      try {
+        const list = JSON.parse(saved);
+        const found = list.find((a: any) => a.id === resolvedParams.id);
+        if (found) {
+          setAppr(found);
+          setStatus(found.status);
+        }
+      } catch {
+        // fallback
+      }
+    }
+    setLoading(false);
+  }, [resolvedParams.id]);
+
+  if (!loading && !appr) {
+    return (
+      <div className="space-y-6">
+        <Link href="/approvals" className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:underline mb-2">
+          <ArrowLeft size={16} /> 결재 목록으로 돌아가기
+        </Link>
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <h3 className="text-base font-black text-slate-900">결재 문서를 찾을 수 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            상신된 결재 기안서가 없거나 삭제되었습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !appr) {
+    return <div className="p-8 text-center text-slate-400 text-xs">불러오는 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

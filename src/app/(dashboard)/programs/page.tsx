@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { mockPrograms } from "@/data/mock-daycare-store";
 
 export default function ProgramsPage() {
+  const [programs] = useState<any[]>([]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -24,45 +27,54 @@ export default function ProgramsPage() {
         </Button>
       </div>
 
-      {/* Program Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {mockPrograms.map((p) => (
-          <Link
-            key={p.id}
-            href={`/programs/${p.id}`}
-            className="group rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-500 hover:shadow-md block"
-          >
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
-                {p.category}
-              </span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${p.status === "완료" ? "bg-emerald-100 text-emerald-800" : p.status === "진행중" ? "bg-sky-100 text-sky-800" : "bg-slate-100 text-slate-700"}`}>
-                {p.status}
-              </span>
-            </div>
-
-            <h2 className="mt-3 text-lg font-bold text-slate-900 group-hover:text-sky-600">{p.title}</h2>
-            <p className="mt-2 text-xs text-slate-600 line-clamp-2">{p.description}</p>
-
-            <div className="mt-4 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-500 font-semibold">
+      {/* Program Cards Grid or Empty State */}
+      {programs.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <h3 className="text-base font-black text-slate-900">등록된 프로그램 일정이 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            신체 및 인지 재활 프로그램을 등록하여 어르신 참여 현황을 관리해보세요.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {programs.map((p) => (
+            <Link
+              key={p.id}
+              href={`/programs/${p.id}`}
+              className="group rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-500 hover:shadow-md block"
+            >
               <div className="flex items-center justify-between">
-                <span>진행 시간</span>
-                <span className="font-bold text-slate-800">{p.time}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>진행 강사 / 사회복지사</span>
-                <span className="font-bold text-slate-800">{p.instructor}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>참석 인원</span>
-                <span className="font-bold text-sky-700">
-                  {p.attendedCount}명 / 대상 {p.targetCount}명
+                <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
+                  {p.category}
+                </span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${p.status === "완료" ? "bg-emerald-100 text-emerald-800" : p.status === "진행중" ? "bg-sky-100 text-sky-800" : "bg-slate-100 text-slate-700"}`}>
+                  {p.status}
                 </span>
               </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+
+              <h2 className="mt-3 text-lg font-bold text-slate-900 group-hover:text-sky-600">{p.title}</h2>
+              <p className="mt-2 text-xs text-slate-600 line-clamp-2">{p.description}</p>
+
+              <div className="mt-4 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-500 font-semibold">
+                <div className="flex items-center justify-between">
+                  <span>진행 시간</span>
+                  <span className="font-bold text-slate-800">{p.time}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>진행 강사 / 사회복지사</span>
+                  <span className="font-bold text-slate-800">{p.instructor}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>참석 인원</span>
+                  <span className="font-bold text-sky-700">
+                    {p.attendedCount}명 / 대상 {p.targetCount}명
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

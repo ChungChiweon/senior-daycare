@@ -1,15 +1,31 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockPrograms } from "@/data/mock-daycare-store";
 
 export default function ProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const prog = mockPrograms.find((p) => p.id === resolvedParams.id) ?? mockPrograms[0];
+  const [prog, setProg] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"plan" | "attendance" | "result" | "photos">("plan");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("silvercare.programs");
+    if (saved) {
+      try {
+        const list = JSON.parse(saved);
+        const found = list.find((p: any) => p.id === resolvedParams.id);
+        if (found) {
+          setProg(found);
+        }
+      } catch {
+        // fallback
+      }
+    }
+    setLoading(false);
+  }, [resolvedParams.id]);
 
   const tabOptions: { val: "plan" | "attendance" | "result" | "photos"; label: string }[] = [
     { val: "plan", label: "📋 프로그램 계획서" },
@@ -17,6 +33,26 @@ export default function ProgramDetailPage({ params }: { params: Promise<{ id: st
     { val: "result", label: "📝 진행 결과 및 소견" },
     { val: "photos", label: "📸 현장 사진갤러리" }
   ];
+
+  if (!loading && !prog) {
+    return (
+      <div className="space-y-6">
+        <Link href="/programs" className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:underline mb-2">
+          <ArrowLeft size={16} /> 프로그램 목록으로 돌아가기
+        </Link>
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <h3 className="text-base font-black text-slate-900">프로그램 정보를 찾을 수 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            등록된 프로그램이 없거나 삭제되었습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !prog) {
+    return <div className="p-8 text-center text-slate-400 text-xs">불러오는 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

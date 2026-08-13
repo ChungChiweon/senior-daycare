@@ -5,10 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default function SchedulePage() {
-  const routes = [
-    { name: "송영 1호차 (스타렉스)", driver: "김기사 운전원", assistant: "박요양 보호사", count: 6, time: "08:30 ~ 09:10" },
-    { name: "송영 2호차 (카니발)", driver: "이동수 운전원", assistant: "정요양 보호사", count: 4, time: "08:40 ~ 09:20" }
-  ];
+  const routes: any[] = [];
 
   return (
     <div className="space-y-6">
@@ -25,25 +22,37 @@ export default function SchedulePage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {routes.map((r) => (
-          <div key={r.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Truck className="text-sky-600" size={20} /> {r.name}
-              </h2>
-              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
-                {r.count}명 탑승 예정
-              </span>
-            </div>
-            <div className="space-y-1.5 text-xs text-slate-600 font-semibold">
-              <div>운전원: <span className="font-bold text-slate-800">{r.driver}</span></div>
-              <div>동승 보호사: <span className="font-bold text-slate-800">{r.assistant}</span></div>
-              <div>운행 시간대: <span className="font-bold text-sky-700">{r.time}</span></div>
-            </div>
+      {routes.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-sky-50 text-sky-600 mb-1">
+            <Truck size={28} />
           </div>
-        ))}
-      </div>
+          <h3 className="text-base font-black text-slate-900">등록된 송영 노선이 없습니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            [송영 노선 추가] 버튼을 눌러 등하원 차량 호차 및 배정 인원을 등록해보세요.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {routes.map((r) => (
+            <div key={r.name} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Truck className="text-sky-600" size={20} /> {r.name}
+                </h2>
+                <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
+                  {r.count}명 탑승 예정
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs text-slate-600 font-semibold">
+                <div>운전원: <span className="font-bold text-slate-800">{r.driver}</span></div>
+                <div>동승 보호사: <span className="font-bold text-slate-800">{r.assistant}</span></div>
+                <div>운행 시간대: <span className="font-bold text-sky-700">{r.time}</span></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

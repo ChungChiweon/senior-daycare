@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Edit3, Eye, History, Printer, Save, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +13,35 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
 
   // Editable Form State
   const [formData, setFormData] = useState({
-    residentName: "김순자 어르신",
-    careNumber: "L8230192301",
+    residentName: "가상 이용자",
+    careNumber: "L-0000000000",
     grade: "3등급",
-    physicalNotes: "식사 전량 섭취, 송영차량 이동 안전 케어",
-    cognitiveNotes: "칠교놀이 60분 참여, 회상 대화 적극 소통",
-    nursingNotes: "혈압 120/80, 체온 36.5℃, 점심 식후 약 투약"
+    physicalNotes: "일일 케어 입력에 따라 자동 집계됩니다.",
+    cognitiveNotes: "프로그램 참여 기록에 따라 자동 조립됩니다.",
+    nursingNotes: "바이탈 및 투약 관찰에 따라 연동됩니다."
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("silvercare.residents");
+    if (saved) {
+      try {
+        const list = JSON.parse(saved);
+        if (Array.isArray(list) && list.length > 0) {
+          const first = list[0];
+          setFormData({
+            residentName: `${first.name} 어르신`,
+            careNumber: first.careNumber || "L1234567890",
+            grade: first.careGrade || "3등급",
+            physicalNotes: "식사 및 이동 케어 정상 완료",
+            cognitiveNotes: "인지 재활 프로그램 정상 참여",
+            nursingNotes: "바이탈 정상 측정 및 투약 완료"
+          });
+        }
+      } catch {
+        // fallback
+      }
+    }
+  }, []);
 
   const [message, setMessage] = useState("");
 

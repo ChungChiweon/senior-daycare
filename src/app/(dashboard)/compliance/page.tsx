@@ -5,12 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default function CompliancePage() {
-  const checkItems = [
-    { code: "평가-01", title: "수급자 욕구평가 및 케어플랜 연간 주기 준수", status: "양호", score: "10/10점" },
-    { code: "평가-02", title: "급여제공기록지 당일 작성 및 서명 누락 점검", status: "양호", score: "10/10점" },
-    { code: "평가-03", title: "분기별 낙상·욕창 위험도 재평가 기록", status: "보완필요", score: "7/10점" },
-    { code: "평가-04", title: "종사자 안전교육 및 훈련 이력 관리", status: "양호", score: "10/10점" }
-  ];
+  const checkItems: any[] = [];
 
   return (
     <div className="space-y-6">
@@ -30,34 +25,40 @@ export default function CompliancePage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">평가 예상 점수</span>
-          <div className="mt-2 text-3xl font-black text-emerald-600">96.5점</div>
-          <span className="text-xs text-emerald-700 font-bold">A등급 (최우수 기관)</span>
+          <div className="mt-2 text-3xl font-black text-emerald-600">0점</div>
+          <span className="text-xs text-slate-500 font-bold">진단 데이터 대기</span>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">서류 완비율</span>
-          <div className="mt-2 text-3xl font-black text-slate-900">98.2%</div>
-          <span className="text-xs text-slate-500 font-semibold">누락 서류 2건</span>
+          <div className="mt-2 text-3xl font-black text-slate-900">0%</div>
+          <span className="text-xs text-slate-500 font-semibold">누락 서류 0건</span>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
         <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">공단 지표별 세부 점검 결과</h2>
-        <div className="divide-y divide-slate-100 text-xs">
-          {checkItems.map((item) => (
-            <div key={item.code} className="flex items-center justify-between py-3 font-semibold">
-              <div>
-                <span className="font-mono text-slate-400 mr-2">{item.code}</span>
-                <span className="text-slate-900 font-bold">{item.title}</span>
+        {checkItems.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-xs">
+            실습 중 등록된 케어 기록과 결재 서류를 바탕으로 자동 평가 점검이 계산됩니다.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100 text-xs">
+            {checkItems.map((item) => (
+              <div key={item.code} className="flex items-center justify-between py-3 font-semibold">
+                <div>
+                  <span className="font-mono text-slate-400 mr-2">{item.code}</span>
+                  <span className="text-slate-900 font-bold">{item.title}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-slate-700">{item.score}</span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${item.status === "양호" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                    {item.status}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-slate-700">{item.score}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${item.status === "양호" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                  {item.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

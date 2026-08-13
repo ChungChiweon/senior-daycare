@@ -37,10 +37,10 @@ export default function CSVImportPage() {
   const [notification, setNotification] = useState("");
 
   const sampleResidentCSV = [
-    { name: "김순자 어르신", birthdate: "1942-03-12", careGrade: "3등급", days: "월~금", guardianName: "이철수 (장남)", phone: "010-3849-1029", shuttleRoute: "1호차 오목교 코스", healthNotes: "무릎 관절염, 고혈압 약 복용중", isValid: true },
-    { name: "박용식 어르신", birthdate: "1938-11-05", careGrade: "2등급", days: "월~토", guardianName: "박영희 (장녀)", phone: "010-9920-4821", shuttleRoute: "2호차 당산 코스", healthNotes: "치매 초기 단계, 당뇨 식단 케어", isValid: true },
-    { name: "최정자 어르신", birthdate: "1945-07-20", careGrade: "4등급", days: "화/목/토", guardianName: "최성민 (자녀)", phone: "010-7711-2094", shuttleRoute: "1호차 오목교 코스", healthNotes: "보행 보조기 사용, 보행 시 요양보호사 동행", isValid: true },
-    { name: "이복남 어르신", birthdate: "1940-01-15", careGrade: "3등급", days: "월~금", guardianName: "이민수 (장남)", phone: "010-5544-3322", shuttleRoute: "2호차 당산 코스", healthNotes: "우울증 증세, 인지 미술 프로그램 선호", isValid: true }
+    { name: "테스트이용자-01", birthdate: "1942-03-12", careGrade: "3등급", days: "월~금", guardianName: "가족보호자 A", phone: "010-0000-0001", shuttleRoute: "1호차", healthNotes: "고혈압 약 복용중 (합성 테스트 데이터)", isValid: true },
+    { name: "테스트이용자-02", birthdate: "1938-11-05", careGrade: "2등급", days: "월~토", guardianName: "가족보호자 B", phone: "010-0000-0002", shuttleRoute: "2호차", healthNotes: "당뇨 식단 케어 (합성 테스트 데이터)", isValid: true },
+    { name: "테스트이용자-03", birthdate: "1945-07-20", careGrade: "4등급", days: "화/목/토", guardianName: "가족보호자 C", phone: "010-0000-0003", shuttleRoute: "1호차", healthNotes: "보행 보조기 사용 (합성 테스트 데이터)", isValid: true },
+    { name: "테스트이용자-04", birthdate: "1940-01-15", careGrade: "3등급", days: "월~금", guardianName: "가족보호자 D", phone: "010-0000-0004", shuttleRoute: "2호차", healthNotes: "인지 프로그램 선호 (합성 테스트 데이터)", isValid: true }
   ];
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {

@@ -23,18 +23,18 @@ export default function BillingPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">이번달 총 발생 청구액</span>
-          <div className="mt-2 text-3xl font-black text-slate-900">₩34,800,000</div>
+          <div className="mt-2 text-3xl font-black text-slate-900">₩0</div>
           <span className="text-xs text-slate-500 font-semibold">공단 청구액 (85%)</span>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">본인부담금 수납완료</span>
-          <div className="mt-2 text-3xl font-black text-emerald-600">₩5,220,000</div>
-          <span className="text-xs text-emerald-700 font-bold">수납률 92%</span>
+          <div className="mt-2 text-3xl font-black text-emerald-600">₩0</div>
+          <span className="text-xs text-emerald-700 font-bold">수납률 0%</span>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">미수금</span>
-          <div className="mt-2 text-3xl font-black text-amber-600">₩450,000</div>
-          <span className="text-xs text-amber-700 font-bold">미수 2건 (안내문 재발송)</span>
+          <div className="mt-2 text-3xl font-black text-amber-600">₩0</div>
+          <span className="text-xs text-amber-700 font-bold">미수 0건</span>
         </div>
       </div>
     </div>

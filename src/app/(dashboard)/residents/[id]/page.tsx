@@ -1,14 +1,12 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mockResidents } from "@/data/mock-daycare-store";
 
 import { ResidentTimeline } from "@/components/erp/ResidentTimeline";
-
 import { ResidentSummaryCard } from "@/components/erp/ResidentSummaryCard";
 
 const detailTabs = [
@@ -28,8 +26,70 @@ const detailTabs = [
 
 export default function ResidentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const resident = mockResidents.find((r) => r.id === resolvedParams.id) ?? mockResidents[0];
+  const [resident, setResident] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("timeline");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("silvercare.residents");
+    if (saved) {
+      try {
+        const list = JSON.parse(saved);
+        const found = list.find((r: any) => r.id === resolvedParams.id);
+        if (found) {
+          setResident({
+            ...found,
+            initial: found.name ? found.name[0] : "이",
+            gradeLabel: found.careGrade || "3등급",
+            attendance: "출석",
+            attendanceTime: "08:40 등원",
+            gender: "여",
+            age: 82,
+            birthDate: "1944-05-12",
+            careNumber: "L1234567890",
+            status: "재원",
+            primaryManager: "담당 사회복지사",
+            guardianName: "가족 보호자",
+            guardianRelation: "자녀",
+            guardianPhone: "010-0000-0000",
+            address: "서울시 영등포구 테스트동",
+            copayRate: "15% 일반",
+            monthlyLimit: "1,450,000원",
+            contractPeriod: "2026.01.01 ~ 2026.12.31",
+            shuttle: found.shuttleRoute || "1호차",
+            bedridden: false,
+            wheelchair: false,
+            notes: found.healthNotes || "특이사항 없음",
+            tags: ["테스트이용자"]
+          });
+        }
+      } catch {
+        // fallback
+      }
+    }
+    setLoading(false);
+  }, [resolvedParams.id]);
+
+  if (!loading && !resident) {
+    return (
+      <div className="space-y-6">
+        <Link href="/residents" className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:underline mb-2">
+          <ArrowLeft size={16} />
+          어르신 목록으로 돌아가기
+        </Link>
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center space-y-3 shadow-xs">
+          <h3 className="text-base font-black text-slate-900">등록되지 않은 이용자입니다.</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            [이용자 관리] 화면에서 가상 이용자(어르신)를 직접 등록하신 후 상세 타임라인을 확인해보세요.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !resident) {
+    return <div className="p-8 text-center text-slate-400 text-xs">불러오는 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

@@ -50,9 +50,9 @@ const navGroups: NavGroup[] = [
     groupName: "오늘",
     items: [
       { href: "/dashboard", label: "홈", icon: LayoutDashboard },
-      { href: "/handover", label: "현장 인수인계", icon: Smartphone, badge: "📱" },
-      { href: "/daily-care", label: "오늘의 케어", icon: Activity, badge: "필수" },
-      { href: "/tasks", label: "협업 업무 센터", icon: CheckSquare, badge: "N" },
+      { href: "/handover", label: "현장 인수인계", icon: Smartphone },
+      { href: "/daily-care", label: "오늘의 케어", icon: Activity },
+      { href: "/tasks", label: "협업 업무 센터", icon: CheckSquare },
       { href: "/create", label: "통합 문서 AI", icon: Sparkles }
     ]
   },
@@ -60,7 +60,7 @@ const navGroups: NavGroup[] = [
     groupName: "이용자",
     items: [
       { href: "/residents", label: "이용자 관리", icon: Users },
-      { href: "/import", label: "CSV 일괄 이관", icon: Upload, badge: "⚡" },
+      { href: "/import", label: "CSV 일괄 이관", icon: Upload },
       { href: "/case-management", label: "사례관리", icon: FileCheck },
       { href: "/programs", label: "프로그램", icon: Activity },
       { href: "/communications", label: "보호자 소통", icon: MessageSquare }
@@ -69,10 +69,10 @@ const navGroups: NavGroup[] = [
   {
     groupName: "운영",
     items: [
-      { href: "/calendar", label: "운영 캘린더", icon: Calendar, badge: "🗓️" },
-      { href: "/risk-center", label: "운영 리스크 센터", icon: ShieldAlert, badge: "🔴 3" },
+      { href: "/calendar", label: "운영 캘린더", icon: Calendar },
+      { href: "/risk-center", label: "운영 리스크 센터", icon: ShieldAlert },
       { href: "/documents", label: "문서 자동화", icon: FileSpreadsheet },
-      { href: "/approvals", label: "승인 센터", icon: CheckSquare, badge: "5" },
+      { href: "/approvals", label: "승인 센터", icon: CheckSquare },
       { href: "/compliance", label: "평가·감사 대응", icon: Award },
       { href: "/schedule", label: "일정·송영", icon: Calendar },
       { href: "/billing", label: "수납·청구", icon: CreditCard }
@@ -81,13 +81,13 @@ const navGroups: NavGroup[] = [
   {
     groupName: "기관",
     items: [
-      { href: "/admin/beta-program", label: "베타 파일럿 관제", icon: Flag, badge: "🚩" },
-      { href: "/training", label: "직원 교육 모드", icon: GraduationCap, badge: "🎓" },
-      { href: "/feedback", label: "현장 피드백", icon: MessageSquare, badge: "💬" },
-      { href: "/admin", label: "SaaS 슈퍼어드민", icon: ShieldCheck, badge: "👑" },
+      { href: "/admin/beta-program", label: "베타 파일럿 관제", icon: Flag },
+      { href: "/training", label: "직원 교육 모드", icon: GraduationCap },
+      { href: "/feedback", label: "현장 피드백", icon: MessageSquare },
+      { href: "/admin", label: "SaaS 슈퍼어드민", icon: ShieldCheck },
       { href: "/admin/beta-report", label: "베타 분석 리포트", icon: BarChart3 },
       { href: "/admin/support", label: "고객 지원 센터", icon: LifeBuoy },
-      { href: "/staff/invite", label: "직원 초대", icon: UserPlus, badge: "✉️" },
+      { href: "/staff/invite", label: "직원 초대", icon: UserPlus },
       { href: "/onboarding", label: "기관 온보딩", icon: Building2 },
       { href: "/staff", label: "직원·근무", icon: UserCheck },
       { href: "/reports", label: "통계·리포트", icon: PieChart },

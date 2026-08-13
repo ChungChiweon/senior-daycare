@@ -22,19 +22,19 @@ export default function ReportsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs font-bold text-slate-400">7월 어르신 평균 출석률</span>
-          <div className="mt-2 text-3xl font-black text-emerald-600">95.4%</div>
-          <span className="text-xs text-emerald-700 font-bold">전월 대비 +2.1% 증가</span>
+          <span className="text-xs font-bold text-slate-400">어르신 평균 출석률</span>
+          <div className="mt-2 text-3xl font-black text-emerald-600">0%</div>
+          <span className="text-xs text-slate-500 font-bold">실습 출석 데이터 대기</span>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <span className="text-xs font-bold text-slate-400">급여제공기록지 당일 작성률</span>
-          <div className="mt-2 text-3xl font-black text-sky-600">100%</div>
-          <span className="text-xs text-sky-700 font-bold">지연 작성 0건</span>
+          <div className="mt-2 text-3xl font-black text-sky-600">0%</div>
+          <span className="text-xs text-slate-500 font-bold">기록 작성 대기</span>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <span className="text-xs font-bold text-slate-400">보호자 알림장 만족도</span>
-          <div className="mt-2 text-3xl font-black text-purple-600">4.9 / 5.0</div>
-          <span className="text-xs text-purple-700 font-bold">카카오 알림톡 오픈율 98%</span>
+          <span className="text-xs font-bold text-slate-400">보호자 알림장 발송</span>
+          <div className="mt-2 text-3xl font-black text-purple-600">0건</div>
+          <span className="text-xs text-slate-500 font-bold">발송 이력 없음</span>
         </div>
       </div>
     </div>
