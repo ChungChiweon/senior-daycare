@@ -57,31 +57,40 @@ export const BETA_RESIDENTS: BetaResident[] = Array.from({ length: 35 }).map((_,
 // 15 Staff Accounts for Daycare Center A
 export const BETA_STAFF_ACCOUNTS: BetaStaffAccount[] = [
   {
+    id: "staff-sw-a",
+    name: "사회복지사 A",
+    roleCode: "social_worker",
+    roleLabel: "사회복지사 (선임)",
+    title: "팀장 / 사례관리 (beta-sw-a)",
+    permissions: ["이용자관리", "사례관리", "AI문서생성", "보호자소통", "프로그램"],
+    assignedTaskCount: 0
+  },
+  {
+    id: "staff-sw-b",
+    name: "사회복지사 B",
+    roleCode: "social_worker",
+    roleLabel: "사회복지사 (주임)",
+    title: "프로그램 담당 (beta-sw-b)",
+    permissions: ["이용자관리", "프로그램", "AI문서생성", "알림장발송"],
+    assignedTaskCount: 0
+  },
+  {
+    id: "staff-sw-c",
+    name: "사회복지사 C",
+    roleCode: "social_worker",
+    roleLabel: "사회복지사 (신임)",
+    title: "상담·인테이크 담당 (beta-sw-c)",
+    permissions: ["이용자관리", "상담인테이크", "AI문서생성", "보호자소통"],
+    assignedTaskCount: 0
+  },
+  {
     id: "staff-01",
     name: "김철수",
     roleCode: "manager",
     roleLabel: "시설장",
-    title: "센터장 / 원장",
-    permissions: ["전체현황", "전자결재", "리스크센터", "직원근태", "평가감사"],
-    assignedTaskCount: 3
-  },
-  {
-    id: "staff-02",
-    name: "박지영",
-    roleCode: "social_worker",
-    roleLabel: "사회복지사 (선임)",
-    title: "팀장 / 사례관리",
-    permissions: ["이용자관리", "사례관리", "AI문서생성", "보호자소통", "프로그램"],
-    assignedTaskCount: 5
-  },
-  {
-    id: "staff-03",
-    name: "이복지",
-    roleCode: "social_worker",
-    roleLabel: "사회복지사 (주임)",
-    title: "프로그램 담당",
-    permissions: ["이용자관리", "프로그램", "AI문서생성", "알림장발송"],
-    assignedTaskCount: 2
+    title: "센터장 / 원장 (관리자)",
+    permissions: ["전체현황", "전자결재", "리스크센터", "직원근태", "평가감사", "베타리셋"],
+    assignedTaskCount: 0
   },
   {
     id: "staff-04",

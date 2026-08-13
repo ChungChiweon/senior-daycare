@@ -27,6 +27,8 @@ import {
 import { FeatureKillSwitchStore, type AiFeatureKey } from "@/lib/feature-kill-switch";
 import type { AssistantPreparedItem, PersonalAssistantContext } from "@/types/personal-assistant";
 
+import { BETA_STAFF_ACCOUNTS } from "@/lib/data/beta-institution-seed";
+
 export default function PersonalAssistantPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"today" | "drafts" | "replies" | "deadlines" | "eod">("today");
@@ -42,20 +44,48 @@ export default function PersonalAssistantPanel() {
 
   useEffect(() => {
     try {
-      // Build Context for current authenticated user
-      // Pass real userId and orgId (e.g., from auth store). If missing, engine returns null (Empty State)
-      const ctx = PersonalAssistantEngine.buildContextFromAuth("u-social-01", "org-01");
-      setContext(ctx);
-      if (ctx) {
-        setPreparedItems(ctx.prepared_items);
+      const activeStaffId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("silvercare.activeStaffId") || "staff-sw-a"
+          : "staff-sw-a";
+      const foundStaff = BETA_STAFF_ACCOUNTS.find((s) => s.id === activeStaffId);
+      const userName = foundStaff ? foundStaff.name : "사회복지사 A";
+      const role = foundStaff?.roleCode === "manager" ? "시설장" : "사회복지사";
+
+      // Private draft isolation per user_id
+      const draftStorageKey = `silvercare.preparedItems.${activeStaffId}`;
+      let userDrafts: AssistantPreparedItem[] = [];
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem(draftStorageKey);
+        if (raw) {
+          try {
+            userDrafts = JSON.parse(raw);
+          } catch {
+            userDrafts = [];
+          }
+        }
       }
+
+      // Build Context dynamically for active social worker
+      const ctx = PersonalAssistantEngine.buildContextFromAuth(
+        activeStaffId,
+        "org-hands-on-beta",
+        role,
+        [],
+        userDrafts
+      );
+      if (ctx) {
+        ctx.user_name = userName;
+      }
+      setContext(ctx);
+      setPreparedItems(userDrafts);
     } catch (err) {
       console.error("AI Assistant Engine load error:", err);
       setContext(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isOpen]);
 
   // 1-Click ONLY for entering Draft Review Modal (High-risk actions require explicit human review)
   const handleOpenReviewModal = (item: AssistantPreparedItem) => {
