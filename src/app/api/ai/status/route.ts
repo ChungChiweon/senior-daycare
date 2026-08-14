@@ -15,7 +15,7 @@ export async function GET() {
   const keyPrefix = keyConfigured ? apiKey!.slice(0, 7) + "..." : "NOT_SET";
 
   // Minimal connectivity probe — 1 token, no personal data
-  let probeResult: "not_attempted" | "success" | "model_error" | "auth_error" | "network_error" | "unknown_error" = "not_attempted";
+  let probeResult: "not_attempted" | "success" | "empty_output" | "model_error" | "auth_error" | "network_error" | "unknown_error" = "not_attempted";
   let probeModel: string | null = null;
   let probeLatencyMs: number | null = null;
   let probeErrorMsg: string | null = null;
@@ -28,9 +28,18 @@ export async function GET() {
         model,
         store: false,
         input: "ping",
-        max_output_tokens: 5
+        max_output_tokens: 50
       });
-      probeResult = "success";
+      // Safe extraction — never call output_text getter (throws on empty)
+      let probeText = "";
+      for (const item of resp.output ?? []) {
+        if (item.type === "message") {
+          for (const content of item.content ?? []) {
+            if (content.type === "output_text") { probeText = content.text; break; }
+          }
+        }
+      }
+      probeResult = probeText ? "success" : "empty_output";
       probeModel = resp.model;
       probeLatencyMs = Date.now() - probeStart;
     } catch (err: unknown) {

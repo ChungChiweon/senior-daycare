@@ -108,8 +108,15 @@ function getOpenAiClient(): { client: OpenAI | null; model: string; isEnabled: b
 }
 
 /**
- * Call Responses API and return output_text.
- * Falls back gracefully on any error.
+ * Call Responses API and return the text content safely.
+ *
+ * Key design decisions:
+ * - No text.format (json_object): gpt-5-mini does not support this parameter;
+ *   JSON structure is enforced via prompt instructions instead.
+ * - Never calls response.output_text getter: that getter THROWS if output is
+ *   empty, which cannot be caught with `??`. Instead, we iterate response.output
+ *   directly and return "{}" on empty — triggering graceful deterministic fallback.
+ * - store: false: prevents OpenAI from retaining request/response data.
  */
 async function callResponsesAPI(
   client: OpenAI,
@@ -123,13 +130,23 @@ async function callResponsesAPI(
     store: false,
     instructions: systemInstruction,
     input: userPrompt,
-    text: {
-      format: { type: "json_object" }
-    },
     max_output_tokens: maxOutputTokens
   });
 
-  const text = response.output_text ?? "{}";
+  // Safe extraction — do NOT use response.output_text getter (throws on empty output)
+  let text = "{}";
+  for (const item of response.output ?? []) {
+    if (item.type === "message") {
+      for (const content of item.content ?? []) {
+        if (content.type === "output_text" && content.text) {
+          text = content.text;
+          break;
+        }
+      }
+    }
+    if (text !== "{}") break;
+  }
+
   return {
     text,
     inputTokens: response.usage?.input_tokens ?? 0,
