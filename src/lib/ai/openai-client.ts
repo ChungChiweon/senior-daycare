@@ -129,9 +129,13 @@ async function callLLM(
 ): Promise<LLMResult> {
   if (useResponsesApi(model)) {
     // ── Responses API path (gpt-5*, o-series) ──────────────────────────────
+    // reasoning.effort is required for gpt-5-mini: without it, reasoning tokens
+    // can exhaust the entire output budget leaving visible text empty.
+    // 'low' provides fastest response with minimal reasoning overhead.
     const resp = await client.responses.create({
       model,
       store: false,
+      reasoning: { effort: "low" },
       instructions: systemInstruction,
       input: userPrompt,
       max_output_tokens: maxTokens
@@ -151,8 +155,15 @@ async function callLLM(
       if (text) break;
     }
 
+    // Also check status — incomplete means reasoning ran out of tokens
+    if (resp.status === "incomplete") {
+      const reason = resp.incomplete_details?.reason ?? "unknown";
+      console.warn(`[callLLM] Responses API status=incomplete reason=${reason} model=${model}`);
+      throw new Error(`LLM output incomplete (reason: ${reason}) — deterministic fallback required`);
+    }
+
     if (!text) {
-      console.warn(`[callLLM] Responses API returned empty output for model=${model}. Raising to trigger fallback.`);
+      console.warn(`[callLLM] Responses API returned empty output for model=${model}. Triggering fallback.`);
       throw new Error("LLM returned empty output — deterministic fallback required");
     }
 
@@ -235,7 +246,10 @@ export async function generateConsultationSummaryLLM(
 ${JSON.stringify(boundedFacts, null, 2)}`;
 
   try {
-    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 600);
+    // gpt-5-mini reasoning models consume extra tokens for reasoning;
+    // use larger budget so visible output is not crowded out.
+    const maxTok_cs = useResponsesApi(model) ? 1200 : 600;
+    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_cs);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(
       (parsed.summary ?? "") + " " + (parsed.talking_points ?? []).join(" "),
@@ -297,7 +311,8 @@ ${input.deterministicSkeleton}
 ${JSON.stringify(boundedBlocks, null, 2)}`;
 
   try {
-    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 800);
+    const maxTok_dd = useResponsesApi(model) ? 1600 : 800;
+    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_dd);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(parsed.refined_text ?? "", sourceIds, parsed.source_ids ?? []);
     if (!validation.isValid) return buildDeterministicDraft(validation.reason);
@@ -358,7 +373,8 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
 [특이 관찰 사실]: ${input.cautionNotes || "특이사항 없이 밝은 모습으로 활동 완료"}`;
 
   try {
-    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 500);
+    const maxTok_gn = useResponsesApi(model) ? 800 : 500;
+    const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_gn);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(parsed.notice_body ?? "");
     if (!validation.isValid) return buildDeterministicNotice(validation.reason);
