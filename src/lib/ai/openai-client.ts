@@ -5,6 +5,9 @@
  * 2. document_draft
  * 3. guardian_notice_draft
  * With automatic deterministic fallback and strict social work guardrails.
+ *
+ * Uses OpenAI Responses API (client.responses.create) which is required for
+ * gpt-5-mini and newer models. store:false prevents data retention.
  */
 
 import OpenAI from "openai";
@@ -13,7 +16,7 @@ import {
   validateSocialWorkOutput,
   logAiUsage
 } from "@/lib/ai/social-work-guardrails";
-import { FeatureKillSwitchStore, type AiFeatureKey } from "@/lib/feature-kill-switch";
+import { FeatureKillSwitchStore } from "@/lib/feature-kill-switch";
 
 export type ConsultationSummaryInput = {
   organizationId?: string;
@@ -89,7 +92,7 @@ export type GuardianNoticeOutput = {
 function getOpenAiClient(): { client: OpenAI | null; model: string; isEnabled: boolean } {
   const apiKey = process.env.OPENAI_API_KEY;
   const isEnabled = Boolean(apiKey && apiKey.trim().length > 0 && process.env.AI_PROVIDER !== "mock");
-  const model = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini";
+  const model = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
 
   if (!isEnabled || !apiKey) {
     return { client: null, model, isEnabled: false };
@@ -102,6 +105,37 @@ function getOpenAiClient(): { client: OpenAI | null; model: string; isEnabled: b
     console.error("[OpenAI Client Init Error]:", err);
     return { client: null, model, isEnabled: false };
   }
+}
+
+/**
+ * Call Responses API and return output_text.
+ * Falls back gracefully on any error.
+ */
+async function callResponsesAPI(
+  client: OpenAI,
+  model: string,
+  systemInstruction: string,
+  userPrompt: string,
+  maxOutputTokens: number
+): Promise<{ text: string; inputTokens: number; outputTokens: number; actualModel: string }> {
+  const response = await client.responses.create({
+    model,
+    store: false,
+    instructions: systemInstruction,
+    input: userPrompt,
+    text: {
+      format: { type: "json_object" }
+    },
+    max_output_tokens: maxOutputTokens
+  });
+
+  const text = response.output_text ?? "{}";
+  return {
+    text,
+    inputTokens: response.usage?.input_tokens ?? 0,
+    outputTokens: response.usage?.output_tokens ?? 0,
+    actualModel: response.model ?? model
+  };
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -159,16 +193,7 @@ export async function generateConsultationSummaryLLM(
   const boundedFacts = input.facts.slice(0, 20);
 
   try {
-    const response = await client.chat.completions.create({
-      model,
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-      max_completion_tokens: 600,
-      messages: [
-        { role: "system", content: SOCIAL_WORK_SYSTEM_INSTRUCTION },
-        {
-          role: "user",
-          content: `다음 수급자 관찰 팩트 목록을 바탕으로 보호자 상담 준비용 팩트 요약을 작성해주세요.
+    const userPrompt = `다음 수급자 관찰 팩트 목록을 바탕으로 보호자 상담 준비용 팩트 요약을 작성해주세요.
 반드시 JSON 객체로 반환하세요:
 {
   "summary": "어르신 최근 사실 요약 (진단이나 상태 악화 단정 표현 절대 금지, 관찰된 사실만 간결히)",
@@ -180,13 +205,10 @@ export async function generateConsultationSummaryLLM(
 [수급자]: ${input.residentName}
 [서비스 목표]: ${input.service_goal || "기능 유지 및 안전한 일상생활 지원"}
 [제공된 사실(Facts)]:
-${JSON.stringify(boundedFacts, null, 2)}`
-        }
-      ]
-    });
+${JSON.stringify(boundedFacts, null, 2)}`;
 
-    const raw = response.choices[0]?.message.content ?? "{}";
-    const parsed = JSON.parse(raw);
+    const result = await callResponsesAPI(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 600);
+    const parsed = JSON.parse(result.text);
 
     const validation = validateSocialWorkOutput(
       parsed.summary + " " + (parsed.talking_points || []).join(" "),
@@ -201,9 +223,9 @@ ${JSON.stringify(boundedFacts, null, 2)}`
     logAiUsage({
       timestamp: new Date().toISOString(),
       task: "consultation_summary",
-      model,
-      inputTokenEstimate: response.usage?.prompt_tokens,
-      outputTokenEstimate: response.usage?.completion_tokens,
+      model: result.actualModel,
+      inputTokenEstimate: result.inputTokens,
+      outputTokenEstimate: result.outputTokens,
       latencyMs: Date.now() - startTime,
       success: true,
       generationMode: "llm_refined"
@@ -216,7 +238,7 @@ ${JSON.stringify(boundedFacts, null, 2)}`
       uncertain_points: Array.isArray(parsed.uncertain_points) ? parsed.uncertain_points : [],
       prohibited_judgment_detected: false,
       generation_mode: "llm_refined",
-      model
+      model: result.actualModel
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "OpenAI API Call Exception";
@@ -270,16 +292,7 @@ export async function generateDocumentDraftLLM(
   const boundedBlocks = input.blocks.slice(0, 30);
 
   try {
-    const response = await client.chat.completions.create({
-      model,
-      response_format: { type: "json_object" },
-      temperature: 0.3,
-      max_completion_tokens: 800,
-      messages: [
-        { role: "system", content: SOCIAL_WORK_SYSTEM_INSTRUCTION },
-        {
-          role: "user",
-          content: `다음 노인 주간보호센터 서식의 기초 초안(deterministic skeleton)을 바탕으로, 문장을 자연스럽고 명확한 행정 서식 문체로 정돈해주세요.
+    const userPrompt = `다음 노인 주간보호센터 서식의 기초 초안(deterministic skeleton)을 바탕으로, 문장을 자연스럽고 명확한 행정 서식 문체로 정돈해주세요.
 주의: 숫자, 날짜, 어르신 이름, 바이탈 수치, 식사량, 투약 사실 등 원본 사실은 임의로 변경하거나 추가하지 마세요.
 반드시 JSON 객체로 반환하세요:
 {
@@ -295,13 +308,10 @@ export async function generateDocumentDraftLLM(
 ${input.deterministicSkeleton}
 
 [참고 원본 블록(Facts)]:
-${JSON.stringify(boundedBlocks, null, 2)}`
-        }
-      ]
-    });
+${JSON.stringify(boundedBlocks, null, 2)}`;
 
-    const raw = response.choices[0]?.message.content ?? "{}";
-    const parsed = JSON.parse(raw);
+    const result = await callResponsesAPI(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 800);
+    const parsed = JSON.parse(result.text);
 
     const validation = validateSocialWorkOutput(
       parsed.refined_text,
@@ -316,9 +326,9 @@ ${JSON.stringify(boundedBlocks, null, 2)}`
     logAiUsage({
       timestamp: new Date().toISOString(),
       task: "document_draft",
-      model,
-      inputTokenEstimate: response.usage?.prompt_tokens,
-      outputTokenEstimate: response.usage?.completion_tokens,
+      model: result.actualModel,
+      inputTokenEstimate: result.inputTokens,
+      outputTokenEstimate: result.outputTokens,
       latencyMs: Date.now() - startTime,
       success: true,
       generationMode: "llm_refined"
@@ -329,7 +339,7 @@ ${JSON.stringify(boundedBlocks, null, 2)}`
       refined_text: parsed.refined_text || input.deterministicSkeleton,
       source_ids: Array.isArray(parsed.source_ids) ? parsed.source_ids : sourceIds,
       generation_mode: "llm_refined",
-      model
+      model: result.actualModel
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "OpenAI API Call Exception";
@@ -374,7 +384,7 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
     };
   };
 
-  // Check Kill Switch (Map to consultation_summary or global)
+  // Check Kill Switch
   if (!FeatureKillSwitchStore.isFeatureEnabled(orgId, "consultation_summary")) {
     return buildDeterministicNotice("Kill Switch Disabled");
   }
@@ -385,16 +395,7 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
   }
 
   try {
-    const response = await client.chat.completions.create({
-      model,
-      response_format: { type: "json_object" },
-      temperature: 0.4,
-      max_completion_tokens: 500,
-      messages: [
-        { role: "system", content: SOCIAL_WORK_SYSTEM_INSTRUCTION },
-        {
-          role: "user",
-          content: `다음 주간보호 어르신의 일일 관찰 팩트를 바탕으로, 보호자가 읽기 쉬운 다정하고 안심을 주는 일일 알림장을 작성해주세요.
+    const userPrompt = `다음 주간보호 어르신의 일일 관찰 팩트를 바탕으로, 보호자가 읽기 쉬운 다정하고 안심을 주는 일일 알림장을 작성해주세요.
 금지: '건강 악화', '인지 저하', '우울감 의심' 등 진단/낙인 표현 절대 금지. 오직 관찰된 사실만 따뜻하게 안내.
 반드시 JSON 객체로 반환하세요:
 {
@@ -410,13 +411,10 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
 [지정 투약]: ${input.medicationStatus}
 [바이탈(혈압/체온)]: ${input.bloodPressure} / ${input.temperature}
 [진행 프로그램]: ${input.activityName || "신체유연성 체조 및 인지활동"}
-[특이 관찰 사실]: ${input.cautionNotes || "특이사항 없이 밝은 모습으로 활동 완료"}`
-        }
-      ]
-    });
+[특이 관찰 사실]: ${input.cautionNotes || "특이사항 없이 밝은 모습으로 활동 완료"}`;
 
-    const raw = response.choices[0]?.message.content ?? "{}";
-    const parsed = JSON.parse(raw);
+    const result = await callResponsesAPI(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, 500);
+    const parsed = JSON.parse(result.text);
 
     const validation = validateSocialWorkOutput(parsed.notice_body || "");
 
@@ -427,9 +425,9 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
     logAiUsage({
       timestamp: new Date().toISOString(),
       task: "guardian_notice",
-      model,
-      inputTokenEstimate: response.usage?.prompt_tokens,
-      outputTokenEstimate: response.usage?.completion_tokens,
+      model: result.actualModel,
+      inputTokenEstimate: result.inputTokens,
+      outputTokenEstimate: result.outputTokens,
       latencyMs: Date.now() - startTime,
       success: true,
       generationMode: "llm_refined"
@@ -439,7 +437,7 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
       notice_title: parsed.notice_title || `${input.residentName} 어르신 일일 알림장`,
       notice_body: parsed.notice_body || buildDeterministicNotice().notice_body,
       generation_mode: "llm_refined",
-      model
+      model: result.actualModel
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "OpenAI API Call Exception";

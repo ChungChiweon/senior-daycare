@@ -24,11 +24,11 @@ export async function GET() {
     const probeStart = Date.now();
     try {
       const client = new OpenAI({ apiKey: apiKey!.trim() });
-      const resp = await client.chat.completions.create({
+      const resp = await client.responses.create({
         model,
         store: false,
-        max_completion_tokens: 1,
-        messages: [{ role: "user", content: "ping" }]
+        input: "ping",
+        max_output_tokens: 5
       });
       probeResult = "success";
       probeModel = resp.model;
