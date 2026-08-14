@@ -233,8 +233,14 @@ export function RoleDashboardSwitcher() {
               <span className="text-purple-800 font-bold text-[11px] flex items-center gap-1">
                 <Award size={14} className="text-purple-600" /> 건보공단 평가 준비 충족도
               </span>
-              <div className="text-2xl font-black text-purple-950">100% (양호)</div>
-              <p className="text-[10px] text-purple-700 font-bold">지표 누락 없음</p>
+              <div className="text-2xl font-black text-purple-950">
+                {residents.length === 0
+                  ? "데이터 수집 대기"
+                  : `${Math.round(((residents.length - cautionCount) / residents.length) * 100)}% (양호)`}
+              </div>
+              <p className="text-[10px] text-purple-700 font-bold">
+                {residents.length === 0 ? "이용자 등록 후 평가 지표 산출" : `총 ${residents.length}명 기준 실시간 집계`}
+              </p>
             </div>
           </div>
         </div>

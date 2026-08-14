@@ -208,8 +208,8 @@ export default function ResidentDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div className="rounded-xl border border-slate-200 p-4 space-y-2">
                 <Badge className="bg-slate-100 text-slate-700">부 보호자 (2순위)</Badge>
-                <div className="text-sm font-bold text-slate-900 mt-2">김미영 (차녀)</div>
-                <div className="text-slate-600">연락처: <span className="font-semibold">010-9876-5432</span></div>
+                <div className="text-sm font-bold text-slate-900 mt-2">비상연락처 (가족)</div>
+                <div className="text-slate-600">연락처: <span className="font-semibold">010-0000-0002</span></div>
                 <div className="text-slate-600">비고: 비상시 2차 연락망</div>
               </div>
             </div>
@@ -289,8 +289,8 @@ export default function ResidentDetailPage({ params }: { params: Promise<{ id: s
           <div className="space-y-4 text-xs">
             <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">보호자 및 어르신 상담 기록</h2>
             <div className="rounded-xl border border-slate-200 p-4 space-y-1">
-              <div className="flex justify-between font-bold text-slate-900"><span>2026-07-25 정기 전화상담</span><span>담당: 박지영 사회복지사</span></div>
-              <p className="text-slate-600 mt-1 font-semibold">보호자(이철수) 만족도 높음, 가정 내 야간 보행 케어 조력 안내 완료.</p>
+              <div className="flex justify-between font-bold text-slate-900"><span>2026-07-25 정기 전화상담</span><span>담당: 담당 사회복지사</span></div>
+              <p className="text-slate-600 mt-1 font-semibold">보호자 만족도 높음, 가정 내 야간 보행 케어 조력 안내 완료.</p>
             </div>
           </div>
         )}

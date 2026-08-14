@@ -92,7 +92,7 @@ export function GlobalErpSearch() {
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="어르신 성함(예: 김순자), 보호자, 문서명, 협업 업무 검색..."
+                placeholder="어르신 성함, 인정번호, 보호자, 문서명, 협업 업무 검색..."
                 className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:font-normal"
               />
               <button

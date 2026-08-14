@@ -13,6 +13,9 @@ export default function CommunicationsPage() {
   const [channel, setChannel] = useState<"kakao" | "sms">("kakao");
   const [message, setMessage] = useState("");
 
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationMode, setGenerationMode] = useState<"llm_refined" | "deterministic_fallback" | null>(null);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const raw = localStorage.getItem("silvercare.residents");
@@ -32,15 +35,53 @@ export default function CommunicationsPage() {
 
   const currentResident = residents.find((r) => r.id === selectedResident);
 
-  function generateAiNotice() {
+  async function generateAiNotice() {
     if (!currentResident) return;
-    const text = `[행복주간보호센터 일일 알림장]
+    setIsGenerating(true);
+
+    // Baseline fallback template
+    const fallbackText = `[행복주간보호센터 일일 알림장]
 ${currentResident.name} 어르신 보호자님, 안녕하십니까.
 오늘 어르신께서는 센터 일일 케어와 프로그램에 참여하셨습니다.
-점심 식사(${currentResident.mealLunch})와 지정 투약(${currentResident.medication})을 완료하셨으며, 혈압(${currentResident.bloodPressure})과 체온(${currentResident.temperature})을 확인하였습니다.
-가정에서도 편안하고 건강한 저녁 시간 보내시길 바랍니다.`;
+점심 식사(${currentResident.mealLunch || "전량"})와 지정 투약(${currentResident.medication || "완료"})을 완료하셨으며, 혈압(${currentResident.bloodPressure || "120/80"})과 체온(${currentResident.temperature || "36.5℃"})을 확인하였습니다.
+${currentResident.cautionNotes ? `• 특이사항: ${currentResident.cautionNotes}\n` : ""}가정에서도 편안하고 건강한 저녁 시간 보내시길 바랍니다.`;
 
-    setMessage(text);
+    try {
+      const res = await fetch("/api/ai/guardian-notice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          residentId: currentResident.id,
+          residentName: currentResident.name,
+          guardianName: currentResident.guardianName,
+          mealStatus: currentResident.mealLunch || "전량 섭취",
+          medicationStatus: currentResident.medication || "지정 투약 완료",
+          bloodPressure: currentResident.bloodPressure || "120/80",
+          temperature: currentResident.temperature || "36.5℃",
+          activityName: "맞춤형 신체·인지 재활 활동",
+          cautionNotes: currentResident.cautionNotes,
+          activityDate: new Date().toISOString().split("T")[0],
+          institutionName: "행복주간보호센터"
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notice_body) {
+          setMessage(data.notice_body);
+          setGenerationMode(data.generation_mode || "deterministic_fallback");
+          return;
+        }
+      }
+      // Fallback
+      setMessage(fallbackText);
+      setGenerationMode("deterministic_fallback");
+    } catch {
+      setMessage(fallbackText);
+      setGenerationMode("deterministic_fallback");
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   return (
@@ -116,13 +157,24 @@ ${currentResident.name} 어르신 보호자님, 안녕하십니까.
                     수신자: {currentResident.guardianName} ({currentResident.guardianPhone})
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  {generationMode === "llm_refined" && (
+                    <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                      ✨ AI 문장 초안
+                    </Badge>
+                  )}
+                  {generationMode === "deterministic_fallback" && (
+                    <Badge className="bg-slate-600 text-white font-bold text-[10px]">
+                      📋 기록 기반 자동 초안
+                    </Badge>
+                  )}
                   <Button
                     onClick={generateAiNotice}
-                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-9 gap-1.5"
+                    disabled={isGenerating}
+                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-9 gap-1.5 shadow-sm"
                   >
-                    <Sparkles size={15} />
-                    당일 기록 기반 AI 초안 생성
+                    <Sparkles size={15} className={isGenerating ? "animate-spin" : ""} />
+                    <span>{isGenerating ? "초안 작성 중..." : "당일 기록 기반 AI 초안 생성"}</span>
                   </Button>
                 </div>
               </div>

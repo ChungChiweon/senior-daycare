@@ -39,8 +39,10 @@ import type {
   IntegratedResident
 } from "@/types/integrated-care";
 import type { BlockType, RecordBlock, VisibilityScope } from "@/types/record-block";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 export function UnifiedContentStudio() {
+  const currentUser = useCurrentUser();
   const today = new Date().toISOString().slice(0, 10);
   const [currentDate, setCurrentDate] = useState(today);
 
@@ -146,13 +148,13 @@ export function UnifiedContentStudio() {
         sleep: "30~60분",
         moodState: "활기참",
         notes: "",
-        staffAssigned: "박지영 사회복지사",
+        staffAssigned: currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "담당 사회복지사",
         actions: [],
         guardianNotice: "알림장 포함",
         privacyScopes: { health: "internal_only", meal: "guardian_ok" }
       }
     );
-  }, [individualCares, activeResidentId]);
+  }, [individualCares, activeResidentId, currentUser]);
 
   const selectedResidents = useMemo(() => {
     return residents.filter((r) => selectedResidentIds.includes(r.id));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, Plus, UserCheck, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import IntakeWizardModal from "@/components/erp/IntakeWizardModal";
 import ReAssessmentCompareView from "@/components/erp/ReAssessmentCompareView";
 import { SocialWorkReminderEngine } from "@/lib/social-work-reminder-engine";
 import type { CaseConferenceRecord, IntakeData, NeedsAssessment } from "@/types/social-work-practice";
+import type { Resident } from "@/data/mock-daycare-store";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 type SubTabKey =
   | "cases"
@@ -20,71 +22,67 @@ type SubTabKey =
   | "plans"
   | "conferences";
 
-const MOCK_PREV_ASSESSMENT: NeedsAssessment = {
-  id: "needs-prev-01",
-  resident_id: "res-01",
-  resident_name: "김순자 어르신",
-  assessment_date: "2025-10-15",
-  physical_needs: "자가 식사 및 보행 가능. 수저 사용 시 손떨림 미약함.",
-  cognitive_needs: "날짜 및 장소 배회 없음. 단기 기억력 정상 수준.",
-  emotional_needs: "우울감 없음. 자녀 방문 시 큰 만족감을 표현함.",
-  family_needs: "주말 자녀 동거. 평일 주간보호 전일 이용 희망.",
-  social_relationship_needs: "소극적 참여. 타 어르신과 대화 적음.",
-  environment_needs: "문턱 제거 완료. 자택 화장실 안전손잡이 설치 필요.",
-  worker_id: "w-01",
-  worker_name: "김사회 복지사",
-  created_at: "2025-10-15"
-};
-
-const MOCK_CURR_ASSESSMENT: NeedsAssessment = {
-  id: "needs-curr-01",
-  resident_id: "res-01",
-  resident_name: "김순자 어르신",
-  assessment_date: "2026-04-15",
-  physical_needs: "점심 식사 섭취 속도 둔화. 수저 사용 보조 및 물 섭취 권유 관찰됨.",
-  cognitive_needs: "단기 기억 저하 관찰. 미술/인지 프로그램 시 반복 설명 안내 필요.",
-  emotional_needs: "우울감 미약. 오후 시간대 자녀 안부 전화 희망.",
-  family_needs: "보호자 주말 케어 부담 다소 증가 호소.",
-  social_relationship_needs: "원예 및 노래 교실에 적극적 관심 표출.",
-  environment_needs: "자택 화장실 손잡이 설치 완료. 송영 시 차 휠체어 보조 요구.",
-  worker_id: "w-02",
-  worker_name: "박복지 사회복지사",
-  created_at: "2026-04-15"
-};
-
-const MOCK_CONFERENCES: CaseConferenceRecord[] = [
-  {
-    id: "conf-01",
-    resident_name: "강태호 어르신",
-    conference_date: "2026-07-30",
-    discussed_facts: "오후 시간대 어지럼증 호소 및 혈압 145/90 측정 증가 팩트 공유.",
-    attendees: ["시설장", "사회복지사", "간호조무사"],
-    worker_judgment: "투약 시간 대조 및 수분 섭취 일지 강화 필요.",
-    decisions: [
-      "일 2회 혈압 모니터링 및 처방약 재확인"
-    ],
-    assignee: "최간호 간호조무사",
-    due_date: "2026-08-05",
-    reflect_in_service_plan: true,
-    share_with_guardian: true,
-    followup_review_date: "2026-08-12",
-    status: "in_progress"
-  }
-];
-
 export default function CaseManagementPage() {
+  const currentUser = useCurrentUser();
   const [activeTab, setActiveTab] = useState<SubTabKey>("cases");
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const [intakeList, setIntakeList] = useState<IntakeData[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
   const [conferences, setConferences] = useState<CaseConferenceRecord[]>([]);
   const [createdTaskMessage, setCreatedTaskMessage] = useState("");
 
   // Conference 2-Field Form state
+  const [conferenceResident, setConferenceResident] = useState("");
   const [newDiscussed, setNewDiscussed] = useState("");
   const [newDecision, setNewDecision] = useState("");
-  const [taskAssignee, setTaskAssignee] = useState("최간호 간호조무사");
+  const [taskAssignee, setTaskAssignee] = useState("간호조무사");
 
-  const reminder = SocialWorkReminderEngine.getCounselingReminder("강태호");
+  // Load Single Source of Truth on Mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const rawRes = localStorage.getItem("silvercare.residents");
+      if (rawRes) {
+        try {
+          const parsed = JSON.parse(rawRes);
+          if (Array.isArray(parsed)) {
+            setResidents(parsed);
+            if (parsed.length > 0) {
+              setConferenceResident(parsed[0].name);
+            }
+          }
+        } catch {
+          setResidents([]);
+        }
+      }
+
+      const rawIntakes = localStorage.getItem("silvercare.intakes");
+      if (rawIntakes) {
+        try {
+          const parsedIntakes = JSON.parse(rawIntakes);
+          if (Array.isArray(parsedIntakes)) {
+            setIntakeList(parsedIntakes);
+          }
+        } catch {
+          setIntakeList([]);
+        }
+      }
+
+      const rawConfs = localStorage.getItem("silvercare.conferences");
+      if (rawConfs) {
+        try {
+          const parsedConfs = JSON.parse(rawConfs);
+          if (Array.isArray(parsedConfs)) {
+            setConferences(parsedConfs);
+          }
+        } catch {
+          setConferences([]);
+        }
+      }
+    }
+  }, []);
+
+  const activeResidentName = intakeList[0]?.resident_name || residents[0]?.name || "";
+  const reminder = activeResidentName ? SocialWorkReminderEngine.getCounselingReminder(activeResidentName) : null;
 
   const subtabs: { key: SubTabKey; label: string }[] = [
     { key: "cases", label: "📋 사례 목록" },
@@ -97,29 +95,48 @@ export default function CaseManagementPage() {
   ];
 
   const handleSaveIntake = (data: IntakeData, isDraft: boolean) => {
-    setIntakeList((prev) => [data, ...prev]);
+    const updated = [data, ...intakeList.filter((i) => i.id !== data.id)];
+    setIntakeList(updated);
+
+    // Refresh resident list
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("silvercare.residents");
+      if (raw) {
+        try {
+          setResidents(JSON.parse(raw));
+        } catch {
+          // ignore
+        }
+      }
+    }
   };
 
   // Save 2-field Case Conference record
   const handleSave2FieldConference = () => {
-    if (!newDiscussed || !newDecision) return;
+    if (!newDiscussed.trim() || !newDecision.trim()) return;
+
+    const resName = conferenceResident || activeResidentName || "이용자";
     const newConf: CaseConferenceRecord = {
       id: `conf-${Date.now()}`,
-      resident_name: "강태호 어르신",
+      resident_name: resName,
       conference_date: new Date().toISOString().split("T")[0],
-      discussed_facts: newDiscussed,
-      attendees: ["사회복지사", "시설장"],
-      worker_judgment: "현장 간속 기록 기반 작성 완료",
-      decisions: [newDecision],
+      discussed_facts: newDiscussed.trim(),
+      attendees: [currentUser?.roleLabel || "사회복지사", "시설장"],
+      worker_judgment: "현장 간소 기록 기반 작성 완료",
+      decisions: [newDecision.trim()],
       assignee: taskAssignee,
-      due_date: "2026-08-10",
+      due_date: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
       reflect_in_service_plan: false,
       share_with_guardian: false,
-      followup_review_date: "2026-08-15",
+      followup_review_date: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
       status: "in_progress"
     };
 
-    setConferences((prev) => [newConf, ...prev]);
+    const updated = [newConf, ...conferences];
+    setConferences(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("silvercare.conferences", JSON.stringify(updated));
+    }
     setNewDiscussed("");
     setNewDecision("");
   };
@@ -131,9 +148,13 @@ export default function CaseManagementPage() {
   };
 
   const handleTogglePlanReflection = (confId: string) => {
-    setConferences((prev) =>
-      prev.map((c) => (c.id === confId ? { ...c, reflect_in_service_plan: !c.reflect_in_service_plan } : c))
+    const updated = conferences.map((c) =>
+      c.id === confId ? { ...c, reflect_in_service_plan: !c.reflect_in_service_plan } : c
     );
+    setConferences(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("silvercare.conferences", JSON.stringify(updated));
+    }
   };
 
   return (
@@ -164,7 +185,7 @@ export default function CaseManagementPage() {
       />
 
       {/* Non-intrusive 1-Line Social Work Practice Guidance Card */}
-      <PracticeGuidanceCard reminder={reminder} />
+      {reminder && <PracticeGuidanceCard reminder={reminder} />}
 
       {/* Sub Tabs */}
       <div className="flex overflow-x-auto gap-2 border-b border-slate-200 pb-2">
@@ -186,16 +207,18 @@ export default function CaseManagementPage() {
 
       {/* Main Content Area */}
       <div className="space-y-6">
-        {activeTab === "timeline" && <PracticeTimelineView residentName="강태호" />}
+        {activeTab === "timeline" && (
+          <PracticeTimelineView
+            residentName={activeResidentName}
+            timelineSteps={[]}
+          />
+        )}
 
         {activeTab === "reassessment_compare" && (
           <ReAssessmentCompareView
-            residentName="김순자"
-            prevAssessment={MOCK_PREV_ASSESSMENT}
-            currAssessment={MOCK_CURR_ASSESSMENT}
-            onSaveInterpretation={(interp, planReview) => {
-              console.log("Saved interpretation:", interp, planReview);
-            }}
+            residentName={activeResidentName}
+            prevAssessment={null}
+            currAssessment={null}
           />
         )}
 
@@ -226,9 +249,11 @@ export default function CaseManagementPage() {
                       </Badge>
                     </div>
                     <p className="text-slate-600 line-clamp-2">
-                      초기상담: {item.initial_counseling || "(기록 내용)"}
+                      초기상담: {item.initial_counseling || "(기록 내용 없음)"}
                     </p>
-                    <div className="text-[11px] text-slate-400">담당 복지사: {item.assigned_worker} | 등록일: {item.created_at}</div>
+                    <div className="text-[11px] text-slate-400">
+                      담당 복지사: {item.assigned_worker || "담당자 미지정"} | 등록일: {item.created_at}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -281,6 +306,16 @@ export default function CaseManagementPage() {
                       </td>
                     </tr>
                   ))}
+                  {conferences.map((conf, idx) => (
+                    <tr key={`conf-${idx}`}>
+                      <td className="p-3 font-bold">{conf.resident_name} 어르신</td>
+                      <td className="p-3">사례회의 ({conf.discussed_facts.slice(0, 20)}...)</td>
+                      <td className="p-3">{conf.assignee || "담당자"}</td>
+                      <td className="p-3">
+                        <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-indigo-800 font-bold">회의완료</span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             )}
@@ -330,13 +365,37 @@ export default function CaseManagementPage() {
                 <Zap size={16} className="text-amber-500" /> 사례회의 2필드 간편 기록
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">대상 어르신</label>
+                  {residents.length > 0 ? (
+                    <select
+                      value={conferenceResident}
+                      onChange={(e) => setConferenceResident(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-semibold"
+                    >
+                      {residents.map((r) => (
+                        <option key={r.id} value={r.name}>
+                          {r.name} 어르신 ({r.grade})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={conferenceResident}
+                      onChange={(e) => setConferenceResident(e.target.value)}
+                      placeholder="대상 어르신 성명 입력"
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-semibold"
+                    />
+                  )}
+                </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">1. 논의 내용 *</label>
                   <input
                     type="text"
                     value={newDiscussed}
                     onChange={(e) => setNewDiscussed(e.target.value)}
-                    placeholder="예: 어르신 오후 어지럼증 호소 팩트 공유"
+                    placeholder="예: 오후 시간대 어지럼증 호소 관찰 팩트 공유"
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
@@ -346,86 +405,91 @@ export default function CaseManagementPage() {
                     type="text"
                     value={newDecision}
                     onChange={(e) => setNewDecision(e.target.value)}
-                    placeholder="예: 일 2회 혈압 측정 및 보호자약 재확인"
+                    placeholder="예: 일 2회 혈압 측정 및 보호자 복약 재확인"
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-bold">담당자 선택:</span>
-                  <select
+                  <span className="text-slate-600 font-bold">업무 담당자:</span>
+                  <input
+                    type="text"
                     value={taskAssignee}
                     onChange={(e) => setTaskAssignee(e.target.value)}
-                    className="text-xs p-1.5 rounded border border-slate-300 bg-white"
-                  >
-                    <option value="최간호 간호조무사">최간호 간호조무사</option>
-                    <option value="박복지 사회복지사">박복지 사회복지사</option>
-                    <option value="이요양 요양보호사">이요양 요양보호사</option>
-                  </select>
+                    placeholder="담당자명 (예: 간호조무사)"
+                    className="p-1.5 px-2.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold"
+                  />
                 </div>
                 <Button
                   onClick={handleSave2FieldConference}
-                  disabled={!newDiscussed || !newDecision}
-                  className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-8 px-4"
+                  className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-9 px-4"
                 >
-                  <Plus size={14} /> 사례회의록 저장
+                  <CheckCircle2 size={16} />
+                  <span>사례회의 기록 저장</span>
                 </Button>
               </div>
             </div>
 
             {createdTaskMessage && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs rounded-lg flex items-center gap-2">
-                <CheckCircle2 size={16} />
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-xs rounded-xl flex items-center gap-2">
+                <Zap size={16} className="text-emerald-600" />
                 <span>{createdTaskMessage}</span>
               </div>
             )}
 
-            {/* List of Conferences */}
-            <div className="space-y-4">
-              {conferences.map((conf) => (
-                <div key={conf.id} className="border border-slate-200 rounded-xl p-4 bg-white space-y-3 shadow-2xs">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-sky-600 text-white font-bold text-[10px]">{conf.resident_name}</Badge>
-                      <span className="font-extrabold text-slate-900 text-xs">사례회의 (일자: {conf.conference_date})</span>
-                    </div>
-                    <span className="text-[11px] text-slate-400 font-medium">담당자: {conf.assignee}</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 block">논의 내용</span>
-                      <p className="font-semibold text-slate-800">{conf.discussed_facts}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-sky-600 block">결정사항</span>
-                      <p className="font-extrabold text-slate-900">{conf.decisions[0]}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                    <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={conf.reflect_in_service_plan}
-                        onChange={() => handleTogglePlanReflection(conf.id)}
-                        className="rounded text-sky-600 focus:ring-sky-500"
-                      />
-                      <span>서비스계획 수동 반영 선택</span>
-                    </label>
-
-                    <Button
-                      onClick={() => handleCreateTaskFromConference(conf)}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs h-7 px-3 flex items-center gap-1 shrink-0"
-                    >
-                      <Zap size={13} />
-                      <span>30초 업무 요청(Task) 자동 생성</span>
-                    </Button>
-                  </div>
+            {/* Conference Records List */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-slate-900">최근 사례회의 이력</h3>
+              {conferences.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
+                  등록된 사례회의 기록이 없습니다. 위 간편 입력을 통해 2개 필드만으로 회의를 기록하세요.
                 </div>
-              ))}
+              ) : (
+                conferences.map((conf) => (
+                  <div key={conf.id} className="p-4 border rounded-xl bg-white space-y-3">
+                    <div className="flex justify-between items-center font-bold text-slate-900 border-b pb-2">
+                      <span className="text-sky-700">{conf.resident_name} 사례회의 ({conf.conference_date})</span>
+                      <span className="text-[11px] text-slate-400">참석: {conf.attendees.join(", ")}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-700">
+                      <div className="p-2.5 bg-slate-50 rounded-lg">
+                        <span className="font-bold text-slate-500 block mb-1">💬 논의 내용</span>
+                        <p>{conf.discussed_facts}</p>
+                      </div>
+                      <div className="p-2.5 bg-amber-50/60 border border-amber-100 rounded-lg">
+                        <span className="font-bold text-amber-800 block mb-1">🎯 결정사항</span>
+                        <p className="font-semibold text-amber-950">{conf.decisions[0]}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePlanReflection(conf.id)}
+                          className={`px-2.5 py-1 rounded-md font-bold transition ${
+                            conf.reflect_in_service_plan
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          {conf.reflect_in_service_plan ? "✓ 급여계획 반영 설정됨" : "+ 급여계획 연계"}
+                        </button>
+                      </div>
+                      <Button
+                        onClick={() => handleCreateTaskFromConference(conf)}
+                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-7 px-3 flex items-center gap-1"
+                      >
+                        <Zap size={13} className="text-amber-400" />
+                        <span>30초 Task 생성</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -20,22 +20,27 @@ import {
 } from "lucide-react";
 import { localTaskRepository } from "@/lib/repository/local-task-repository";
 import type { ErpRole, ErpTask, ErpTaskPriority, ErpTaskStatus } from "@/types/erp-task";
+import { useCurrentUser } from "@/hooks/use-auth-org";
+import { BETA_STAFF_ACCOUNTS } from "@/lib/data/beta-institution-seed";
 
 type FilterTab = "my" | "requested" | "overdue" | "completed" | "all";
 
 export function TaskCollaborationStudio() {
+  const currentUser = useCurrentUser();
   const [tasks, setTasks] = useState<ErpTask[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("REQ-2026-001");
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
-  const [currentUserRole, setCurrentUserRole] = useState<ErpRole>("social_worker");
-  const [currentUserName, setCurrentUserName] = useState("박지영 사회복지사");
+  const [currentUserRole, setCurrentUserRole] = useState<ErpRole>(
+    currentUser?.roleCode === "driver" ? "field_staff" : (currentUser?.roleCode || "social_worker")
+  );
+  const [currentUserName, setCurrentUserName] = useState(currentUser?.name || "사회복지사");
 
   // New Task Modal Form state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newAssignee, setNewAssignee] = useState("이간호 간호조무사");
-  const [newResident, setNewResident] = useState("김순자 어르신");
+  const [newAssignee, setNewAssignee] = useState("간호조무사");
+  const [newResident, setNewResident] = useState("");
   const [newPriority, setNewPriority] = useState<ErpTaskPriority>("high");
   const [newDueDate, setNewDueDate] = useState("2026-08-01 17:00");
 
@@ -494,7 +499,7 @@ export function TaskCollaborationStudio() {
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="예: 김순자 어르신 하원 시 약물 전달 및 온찜질 케어"
+                placeholder="예: 어르신 하원 시 약물 전달 및 온찜질 케어"
                 className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs"
               />
             </div>
@@ -518,10 +523,11 @@ export function TaskCollaborationStudio() {
                   onChange={(e) => setNewAssignee(e.target.value)}
                   className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold"
                 >
-                  <option value="이간호 간호조무사">이간호 간호조무사</option>
-                  <option value="박지영 사회복지사">박지영 사회복지사</option>
-                  <option value="김송영 요양보호사">김송영 요양보호사</option>
-                  <option value="김철수 센터장">김철수 센터장</option>
+                  {BETA_STAFF_ACCOUNTS.map((staff) => (
+                    <option key={staff.id} value={`${staff.name} (${staff.roleLabel})`}>
+                      {staff.name} ({staff.roleLabel})
+                    </option>
+                  ))}
                 </select>
               </div>
 

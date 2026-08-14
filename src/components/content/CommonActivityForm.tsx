@@ -97,7 +97,7 @@ export function CommonActivityForm({ activity, onApply, selectedResidentCount }:
 
         <div>
           <label className="font-bold text-slate-700 block mb-1">담당자</label>
-          <Input value={form.instructor} onChange={(e) => handleChange("instructor", e.target.value)} placeholder="박지영 사회복지사" />
+          <Input value={form.instructor} onChange={(e) => handleChange("instructor", e.target.value)} placeholder="담당 사회복지사" />
         </div>
 
         <div>

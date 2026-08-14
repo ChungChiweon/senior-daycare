@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FileCode,
   Printer,
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { downloadHwpxFile } from "@/lib/hwpx-exporter";
 import { downloadPdfFile } from "@/lib/pdf-exporter";
 import type { DocumentTemplate, ExportMetadata, RecordBlock } from "@/types/record-block";
+
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 type Props = {
   templates: DocumentTemplate[];
@@ -27,11 +29,18 @@ export function DocumentAssemblyPanel({
   blocks,
   residentName
 }: Props) {
-  const [author, setAuthor] = useState("박지영 사회복지사");
-  const [reviewer, setReviewer] = useState("김철수 팀장");
-  const [approver, setApprover] = useState("이영희 센터장");
+  const currentUser = useCurrentUser();
+  const [author, setAuthor] = useState(currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "사회복지사");
+  const [reviewer, setReviewer] = useState("미지정");
+  const [approver, setApprover] = useState("미지정");
   const [isApproved, setIsApproved] = useState(false);
   const [notification, setNotification] = useState("");
+
+  useEffect(() => {
+    if (currentUser?.name) {
+      setAuthor(`${currentUser.name} (${currentUser.roleLabel})`);
+    }
+  }, [currentUser]);
 
   const activeTemplate = useMemo(() => {
     return templates.find((t) => t.id === selectedTemplateId) || templates[0];

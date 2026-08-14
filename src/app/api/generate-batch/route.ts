@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      residentName = "김순자",
+      residentName = "이용자",
       activityDate = new Date().toLocaleDateString("ko-KR"),
       docId,
       blocks = [],
@@ -48,22 +48,58 @@ export async function POST(request: Request) {
       }
     }
 
-    // Single document generation
+    // Single document generation with selective LLM refinement
     if (docId) {
-      const generatedText = generateTextForTemplate(docId);
+      const skeletonText = generateTextForTemplate(docId);
+      const tpl = getTemplateById(docId);
+
+      if (tpl && process.env.OPENAI_API_KEY && process.env.AI_PROVIDER !== "mock") {
+        try {
+          const { generateDocumentDraftLLM } = await import("@/lib/ai/openai-client");
+          const llmResult = await generateDocumentDraftLLM({
+            templateId: docId,
+            templateTitle: tpl.title,
+            category: tpl.category,
+            residentId: "res-01",
+            residentName,
+            activityDate,
+            blocks: blocks.map((b) => ({
+              id: b.id,
+              title: b.title,
+              editedText: b.editedText,
+              aiDraft: b.aiDraft
+            })),
+            deterministicSkeleton: skeletonText
+          });
+
+          return NextResponse.json({
+            docId,
+            text: llmResult.refined_text,
+            timestamp: timeStr,
+            generation_mode: llmResult.generation_mode,
+            model: llmResult.model
+          });
+        } catch {
+          // Fall through to deterministic response
+        }
+      }
+
       return NextResponse.json({
         docId,
-        text: generatedText,
-        timestamp: timeStr
+        text: skeletonText,
+        timestamp: timeStr,
+        generation_mode: "deterministic_fallback",
+        model: "deterministic_engine"
       });
     }
 
-    // Batch generate all 20 documents
-    const results: Record<string, { text: string; timestamp: string }> = {};
+    // Batch generate all 20 documents (Deterministic baseline)
+    const results: Record<string, { text: string; timestamp: string; generation_mode: string }> = {};
     DOCUMENT_REGISTRY.forEach((tpl) => {
       results[tpl.id] = {
         text: generateTextForTemplate(tpl.id),
-        timestamp: timeStr
+        timestamp: timeStr,
+        generation_mode: "deterministic_fallback"
       };
     });
 

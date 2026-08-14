@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,27 +19,13 @@ import {
   X
 } from "lucide-react";
 import type { IntakeData } from "@/types/social-work-practice";
+import type { Resident } from "@/data/mock-daycare-store";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 type IntakeWizardModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: IntakeData, isDraft: boolean) => void;
-};
-
-const INITIAL_FORM: IntakeData = {
-  id: "intake-draft-01",
-  resident_name: "",
-  gender: "여성",
-  birth_date: "1942-05-14",
-  care_level: "3등급",
-  initial_counseling: "",
-  guardian_opinion: "",
-  main_needs: "",
-  risk_caution_facts: "",
-  initial_goals: "",
-  assigned_worker: "김복지 사회복지사",
-  status: "draft",
-  created_at: new Date().toISOString().split("T")[0]
 };
 
 const STEPS = [
@@ -53,12 +39,38 @@ const STEPS = [
 ];
 
 export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWizardModalProps) {
+  const currentUser = useCurrentUser();
   const [mode, setMode] = useState<"quick" | "detailed">("quick");
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<IntakeData>(INITIAL_FORM);
-  const [guardianPhone, setGuardianPhone] = useState("010-9876-5432");
+  const [guardianPhone, setGuardianPhone] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [saveMessage, setSaveMessage] = useState("");
+
+  const [formData, setFormData] = useState<IntakeData>({
+    id: `intake-${Date.now()}`,
+    resident_name: "",
+    gender: "여성",
+    birth_date: "1945-01-01",
+    care_level: "3등급",
+    initial_counseling: "",
+    guardian_opinion: "",
+    main_needs: "",
+    risk_caution_facts: "",
+    initial_goals: "",
+    assigned_worker: "",
+    status: "draft",
+    created_at: new Date().toISOString().split("T")[0]
+  });
+
+  // Set default assigned worker to current logged-in user
+  useEffect(() => {
+    if (currentUser?.name) {
+      setFormData((prev) => ({
+        ...prev,
+        assigned_worker: prev.assigned_worker || `${currentUser.name} (${currentUser.roleLabel})`
+      }));
+    }
+  }, [currentUser]);
 
   if (!isOpen) return null;
 
@@ -66,29 +78,159 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Helper: Persist newly registered resident to Resident Repository / LocalStorage SSOT
+  const syncToResidentRepository = (intake: IntakeData): string => {
+    if (typeof window === "undefined") return `res-${Date.now()}`;
+
+    const raw = localStorage.getItem("silvercare.residents");
+    let existingResidents: Resident[] = [];
+    if (raw) {
+      try {
+        existingResidents = JSON.parse(raw);
+      } catch {
+        existingResidents = [];
+      }
+    }
+
+    const trimmedName = intake.resident_name.trim();
+    const existing = existingResidents.find((r) => r.name === trimmedName);
+    const resId = existing?.id || `res-${Date.now()}`;
+
+    const birthYear = parseInt(intake.birth_date.slice(0, 4), 10) || 1945;
+    const currentYear = new Date().getFullYear();
+    const computedAge = currentYear - birthYear;
+
+    const newResident: Resident = {
+      id: resId,
+      name: trimmedName,
+      initial: trimmedName.slice(-2) || trimmedName,
+      gender: intake.gender === "남성" ? "남" : "여",
+      age: computedAge > 0 && computedAge < 120 ? computedAge : 80,
+      birthDate: intake.birth_date,
+      grade: (intake.care_level as Resident["grade"]) || "3등급",
+      gradeLabel: intake.care_level || "3등급",
+      careNumber: existing?.careNumber || `L${Date.now().toString().slice(-10)}`,
+      group: "A",
+      guardianName: "보호자",
+      guardianRelation: "가족",
+      guardianPhone: guardianPhone.trim(),
+      attendance: "입실",
+      attendanceTime: "09:00",
+      shuttleRoute: "송영 1호차 (08:30)",
+      healthStatus: "양호",
+      bloodPressure: "120/80",
+      temperature: "36.5℃",
+      mealLunch: "전량",
+      mealSnack: "완료",
+      medication: "완료",
+      recordStatus: "기록미작성",
+      cautionNotes: intake.risk_caution_facts?.trim() || undefined
+    };
+
+    const updatedResidents = existing
+      ? existingResidents.map((r) => (r.id === resId ? { ...r, ...newResident } : r))
+      : [newResident, ...existingResidents];
+
+    // Single Source of Truth update
+    localStorage.setItem("silvercare.residents", JSON.stringify(updatedResidents));
+    localStorage.setItem("silvercare.dailyCare", JSON.stringify(updatedResidents));
+
+    // Save intake record history
+    const rawIntakes = localStorage.getItem("silvercare.intakes");
+    let existingIntakes: IntakeData[] = [];
+    if (rawIntakes) {
+      try {
+        existingIntakes = JSON.parse(rawIntakes);
+      } catch {
+        existingIntakes = [];
+      }
+    }
+    const updatedIntakeData: IntakeData = {
+      ...intake,
+      id: intake.id || `intake-${Date.now()}`,
+      resident_id: resId
+    };
+    const updatedIntakes = [
+      updatedIntakeData,
+      ...existingIntakes.filter((i) => i.id !== updatedIntakeData.id)
+    ];
+    localStorage.setItem("silvercare.intakes", JSON.stringify(updatedIntakes));
+
+    // Notify other components
+    window.dispatchEvent(new Event("storage"));
+
+    return resId;
+  };
+
   // Quick Registration Save (Takes under 2 minutes, 5 fields)
   const handleQuickRegister = () => {
-    if (!formData.resident_name) {
+    if (!formData.resident_name.trim()) {
       setSaveMessage("어르신 성명을 입력해주세요.");
       return;
     }
+
+    const assignedWorker =
+      formData.assigned_worker.trim() ||
+      (currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "담당 사회복지사");
+
     const quickData: IntakeData = {
       ...formData,
-      initial_counseling: `[빠른 등록 완료] 보호자연락처: ${guardianPhone}, 이용시작일: ${startDate}`,
+      resident_name: formData.resident_name.trim(),
+      assigned_worker: assignedWorker,
+      initial_counseling: formData.initial_counseling.trim() || `[빠른 등록 완료] 보호자연락처: ${guardianPhone.trim() || "미입력"}, 이용시작일: ${startDate}`,
       status: "completed"
     };
+
+    const residentId = syncToResidentRepository(quickData);
+    quickData.resident_id = residentId;
+
     onSave(quickData, false);
     onClose();
   };
 
   const handleSaveDraft = () => {
-    onSave({ ...formData, status: "draft" }, true);
+    const assignedWorker =
+      formData.assigned_worker.trim() ||
+      (currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "담당 사회복지사");
+
+    const draftData: IntakeData = {
+      ...formData,
+      resident_name: formData.resident_name.trim(),
+      assigned_worker: assignedWorker,
+      status: "draft"
+    };
+
+    if (draftData.resident_name) {
+      const residentId = syncToResidentRepository(draftData);
+      draftData.resident_id = residentId;
+    }
+
+    onSave(draftData, true);
     setSaveMessage("임시저장 완료 (나중에 언제든지 이어서 작성 가능)");
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
   const handleCompleteDetailed = () => {
-    onSave({ ...formData, status: "completed" }, false);
+    if (!formData.resident_name.trim()) {
+      setSaveMessage("어르신 성명을 입력해주세요.");
+      return;
+    }
+
+    const assignedWorker =
+      formData.assigned_worker.trim() ||
+      (currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "담당 사회복지사");
+
+    const completeData: IntakeData = {
+      ...formData,
+      resident_name: formData.resident_name.trim(),
+      assigned_worker: assignedWorker,
+      status: "completed"
+    };
+
+    const residentId = syncToResidentRepository(completeData);
+    completeData.resident_id = residentId;
+
+    onSave(completeData, false);
     onClose();
   };
 
@@ -99,7 +241,7 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
         <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-sky-500 text-white font-bold text-[10px]">속도 우선 원칙</Badge>
+              <Badge className="bg-sky-500 text-white font-bold text-[10px]">Single Source of Truth</Badge>
               <span className="text-xs text-slate-400">신규 이용자 온보딩</span>
             </div>
             <h2 className="text-lg font-black mt-0.5">신규 어르신 이용자 등록</h2>
@@ -147,8 +289,13 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
               </div>
             )}
 
-            <div className="bg-sky-50/70 border border-sky-200 rounded-xl p-3.5 text-xs text-sky-950 font-medium">
-              ⚡ <strong>빠른 등록 원칙</strong>: 바쁜 현장 업무를 위해 <strong>성명, 생년월일, 보호자 연락처, 이용 시작일, 담당자</strong> 5개 필드만 작성하고 즉시 이용자 등록을 완료합니다. (상세 상담/욕구는 나중에 입력 가능)
+            <div className="bg-sky-50/70 border border-sky-200 rounded-xl p-3.5 text-xs text-sky-950 font-medium space-y-1">
+              <p>
+                ⚡ <strong>빠른 등록 원칙</strong>: 바쁜 현장 업무를 위해 <strong>성명, 생년월일, 보호자 연락처, 이용 시작일, 담당자</strong> 5개 필드만 작성하고 즉시 이용자 등록을 완료합니다.
+              </p>
+              <p className="text-[11px] text-sky-700">
+                ※ 등록 즉시 이용자 관리(/residents)와 당일 케어(/daily-care)에 단일 데이터로 자동 연동됩니다.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,7 +305,7 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
                   type="text"
                   value={formData.resident_name}
                   onChange={(e) => handleChange("resident_name", e.target.value)}
-                  placeholder="예: 이순자 어르신"
+                  placeholder="예: 가상 이용자 A01"
                   className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-semibold"
                 />
               </div>
@@ -179,7 +326,7 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
                   type="text"
                   value={guardianPhone}
                   onChange={(e) => setGuardianPhone(e.target.value)}
-                  placeholder="010-XXXX-XXXX"
+                  placeholder="010-0000-0000"
                   className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
@@ -200,6 +347,7 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
                   type="text"
                   value={formData.assigned_worker}
                   onChange={(e) => handleChange("assigned_worker", e.target.value)}
+                  placeholder="담당자명 입력 (기본값: 현재 로그인 사용자)"
                   className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
@@ -244,7 +392,8 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
                   type="text"
                   value={formData.resident_name}
                   onChange={(e) => handleChange("resident_name", e.target.value)}
-                  className="w-full p-2 border rounded"
+                  placeholder="예: 가상 이용자 A01"
+                  className="w-full p-2 border rounded font-semibold"
                 />
               </div>
             )}
@@ -256,6 +405,7 @@ export default function IntakeWizardModal({ isOpen, onClose, onSave }: IntakeWiz
                   rows={5}
                   value={formData.initial_counseling}
                   onChange={(e) => handleChange("initial_counseling", e.target.value)}
+                  placeholder="초기상담 및 이용 희망 사유 등을 자유롭게 입력하세요..."
                   className="w-full p-2 border rounded"
                 />
               </div>

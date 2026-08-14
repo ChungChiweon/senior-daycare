@@ -47,6 +47,7 @@ export type PracticeReflection = {
 
 export type IntakeData = {
   id: string;
+  resident_id?: string;
   resident_name: string;
   gender: string;
   birth_date: string;
@@ -82,8 +83,8 @@ export type ReAssessmentDiff = {
   id: string;
   resident_id: string;
   resident_name: string;
-  previous_assessment: NeedsAssessment;
-  current_assessment: NeedsAssessment;
+  previous_assessment?: NeedsAssessment;
+  current_assessment?: NeedsAssessment;
   differences: {
     category: string;
     prev_text: string;

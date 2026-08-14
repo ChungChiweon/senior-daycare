@@ -6,6 +6,7 @@ export type AiFeatureKey =
   | "record_reuse"
   | "case_conference_preparation"
   | "document_draft"
+  | "guardian_notice_draft"
   | "end_of_day_summary";
 
 export type AiFeatureControlRecord = {
@@ -27,6 +28,7 @@ const DEFAULT_FEATURE_STATE: Record<AiFeatureKey, boolean> = {
   record_reuse: true,
   case_conference_preparation: true,
   document_draft: true,
+  guardian_notice_draft: true,
   end_of_day_summary: true
 };
 

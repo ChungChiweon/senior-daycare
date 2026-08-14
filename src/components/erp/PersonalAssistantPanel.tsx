@@ -87,10 +87,14 @@ export default function PersonalAssistantPanel() {
     }
   }, [isOpen]);
 
+  const [isRefiningLlm, setIsRefiningLlm] = useState(false);
+  const [reviewMode, setReviewMode] = useState<"llm_refined" | "deterministic_fallback" | null>(null);
+
   // 1-Click ONLY for entering Draft Review Modal (High-risk actions require explicit human review)
   const handleOpenReviewModal = (item: AssistantPreparedItem) => {
     setSelectedItemForReview(item);
     setReviewContent(item.prepared_content);
+    setReviewMode(null);
 
     // Stale Draft Check (Check if raw source record was updated after draft creation)
     const staleness = PersonalAssistantEngine.validatePreparedItemStaleness(item);
@@ -98,6 +102,51 @@ export default function PersonalAssistantPanel() {
       setStaleError(staleness.errorMessage);
     } else {
       setStaleError(null);
+    }
+  };
+
+  const handleRefineWithLLM = async () => {
+    if (!selectedItemForReview) return;
+    setIsRefiningLlm(true);
+
+    try {
+      const res = await fetch("/api/ai/consultation-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          residentId: selectedItemForReview.source_record_ids[0] || "res-01",
+          residentName: selectedItemForReview.title.replace(/[^가-힣a-zA-Z0-9\s]/g, "").trim() || "이용자",
+          facts: selectedItemForReview.source_record_ids.map((id) => ({
+            source_id: id,
+            date: new Date().toISOString().split("T")[0],
+            type: "observation",
+            text: reviewContent
+          })),
+          service_goal: "맞춤형 일상 케어 및 기능 유지",
+          requested_output: "guardian_consultation_preparation"
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.summary) {
+          let enhancedText = data.summary;
+          if (data.talking_points && data.talking_points.length > 0) {
+            enhancedText += `\n\n[보호자 상담 핵심 팩트]\n` + data.talking_points.map((p: string) => `• ${p}`).join("\n");
+          }
+          if (data.uncertain_points && data.uncertain_points.length > 0) {
+            enhancedText += `\n\n[확인 필요 사항]\n` + data.uncertain_points.map((u: string) => `? ${u}`).join("\n");
+          }
+          setReviewContent(enhancedText);
+          setReviewMode(data.generation_mode || "deterministic_fallback");
+          return;
+        }
+      }
+      setReviewMode("deterministic_fallback");
+    } catch {
+      setReviewMode("deterministic_fallback");
+    } finally {
+      setIsRefiningLlm(false);
     }
   };
 
@@ -561,18 +610,43 @@ export default function PersonalAssistantPanel() {
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button onClick={() => setSelectedItemForReview(null)} variant="secondary" className="text-xs h-9">
-                취소
-              </Button>
-              <Button
-                disabled={!!staleError}
-                onClick={handleConfirmAndSaveToOrgERP}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 disabled:opacity-50"
-              >
-                <CheckCircle2 size={16} />
-                <span>최종 검토 완료 및 기관 ERP 저장</span>
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isRefiningLlm || !!staleError}
+                  onClick={handleRefineWithLLM}
+                  className="text-xs h-9 gap-1 font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                >
+                  <Sparkles size={14} className={isRefiningLlm ? "animate-spin text-indigo-600" : "text-amber-500"} />
+                  <span>{isRefiningLlm ? "LLM 정돈 중..." : "✨ AI 상담 요약 정돈 (OpenAI)"}</span>
+                </Button>
+                {reviewMode === "llm_refined" && (
+                  <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                    ✨ AI 문장 초안
+                  </Badge>
+                )}
+                {reviewMode === "deterministic_fallback" && (
+                  <Badge className="bg-slate-600 text-white font-bold text-[10px]">
+                    📋 기록 기반 자동 초안
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => setSelectedItemForReview(null)} variant="secondary" className="text-xs h-9">
+                  취소
+                </Button>
+                <Button
+                  disabled={!!staleError}
+                  onClick={handleConfirmAndSaveToOrgERP}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 disabled:opacity-50"
+                >
+                  <CheckCircle2 size={16} />
+                  <span>최종 검토 완료 및 기관 ERP 저장</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

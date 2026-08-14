@@ -96,10 +96,25 @@ const navGroups: NavGroup[] = [
   }
 ];
 
+import { useCurrentUser } from "@/hooks/use-auth-org";
+
 export function SidebarV2() {
   const pathname = usePathname();
   const router = useRouter();
+  const currentUser = useCurrentUser();
   const [email, setEmail] = useState("사회복지사 (행복주간보호)");
+
+  const isManagerOrAdmin = currentUser?.roleCode === "manager";
+
+  const visibleNavGroups = navGroups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (item.href.startsWith("/admin") && !isManagerOrAdmin) {
+        return false;
+      }
+      return true;
+    })
+  })).filter((group) => group.items.length > 0);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("silvercare.demoUser");
@@ -135,7 +150,7 @@ export function SidebarV2() {
       </Link>
 
       <nav className="mt-2 flex-1 overflow-y-auto px-3 space-y-4">
-        {navGroups.map((group) => (
+        {visibleNavGroups.map((group) => (
           <div key={group.groupName}>
             <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {group.groupName}

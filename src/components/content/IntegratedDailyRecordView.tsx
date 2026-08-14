@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Edit3, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 import type {
   CommonActivity,
   IndividualCare,
@@ -40,6 +41,7 @@ export function IntegratedDailyRecordView({
   onOrganizeRecord,
   isOrganized
 }: Props) {
+  const currentUser = useCurrentUser();
   const [editingKey, setEditingKey] = useState<SectionKey | null>(null);
   const [customTexts, setCustomTexts] = useState<Record<string, string>>({});
 
@@ -211,7 +213,7 @@ export function IntegratedDailyRecordView({
               <span className="text-xs text-slate-500 font-semibold">{resident.careNumber}</span>
             </div>
             <p className="mt-0.5 text-xs text-slate-500 font-medium">
-              일자: {date} · 담당: 박지영 사회복지사 · 소속: {resident.group}
+              일자: {date} · 담당: {currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "담당 사회복지사"} · 소속: {resident.group}
             </p>
           </div>
         </div>

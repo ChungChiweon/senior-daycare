@@ -234,7 +234,7 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
             <div className="p-3 border border-slate-200 rounded-lg flex justify-between items-center">
               <div>
                 <span className="font-bold text-slate-900">v1.0 (최초 작성)</span>
-                <p className="text-slate-500 font-normal">2026-07-30 09:00 · 박지영 사회복지사 일괄 자동 생성</p>
+                <p className="text-slate-500 font-normal">2026-07-30 09:00 · 담당 사회복지사 일괄 자동 생성</p>
               </div>
               <Button variant="secondary" className="text-[11px] font-bold py-1 h-7">복원</Button>
             </div>

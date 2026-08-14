@@ -1,7 +1,7 @@
 import type { GeneratedDocItem, UnifiedGenerationInput } from "@/types/content";
 
 export function generateTwentyDocs(input: UnifiedGenerationInput, isTrialMode = false): GeneratedDocItem[] {
-  const senior = input.seniorName ? `${input.seniorName} 어르신` : "김순자 어르신";
+  const senior = input.seniorName ? `${input.seniorName} 어르신` : "어르신";
   const place = input.institution?.name ?? "행복주간보호센터";
   const activity = input.activityName || "실버 건강체조 및 뇌자극 칠교놀이";
   const date = input.activityDate || new Date().toISOString().split("T")[0];
@@ -128,7 +128,7 @@ ${senior} 보호자님, 오늘 어르신의 센터 케어 일지가 등록되었
       categoryLabel: "법정·내부 기록",
       isInternal: true,
       content: `[사회복지사 일일 업무일지]
-일자: ${date} | 담당: 박지영 사회복지사
+일자: ${date} | 담당: 담당 사회복지사
 1. 등하원 송영 차량 1호차 안전 점검 및 탑승 확인 (12명)
 2. ${activity} 프로그램 준비 및 어르신 참여 유도
 3. 급여제공기록지 당일 미작성분 점검 및 보호자 알림장 일괄 생성`

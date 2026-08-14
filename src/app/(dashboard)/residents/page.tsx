@@ -30,16 +30,23 @@ export default function ResidentsPage() {
   const [cautionNotes, setCautionNotes] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const raw = localStorage.getItem("silvercare.residents");
-      if (raw) {
-        try {
-          setResidents(JSON.parse(raw));
-        } catch {
+    const loadData = () => {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("silvercare.residents");
+        if (raw) {
+          try {
+            setResidents(JSON.parse(raw));
+          } catch {
+            setResidents([]);
+          }
+        } else {
           setResidents([]);
         }
       }
-    }
+    };
+    loadData();
+    window.addEventListener("storage", loadData);
+    return () => window.removeEventListener("storage", loadData);
   }, []);
 
   const saveResidents = (newList: Resident[]) => {

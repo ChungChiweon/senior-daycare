@@ -30,6 +30,7 @@ import type { ExportMetadata, RecordBlock } from "@/types/record-block";
 import type { FieldRecord } from "@/components/content/MobileFieldLogger";
 import { detectRecordConflicts, type RecordConflict } from "@/lib/ai/record-conflict-detector";
 import { FactTraceabilityModal } from "@/components/content/FactTraceabilityModal";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 type Props = {
   residentName: string;
@@ -47,6 +48,7 @@ type DocumentVersion = {
   text: string;
   savedAt?: string;
   isSaved?: boolean;
+  generationMode?: "llm_refined" | "deterministic_fallback";
 };
 
 type CategoryGroup = {
@@ -64,6 +66,7 @@ export function DocumentGeneratorPanel({
   activeResidentId = "res-01",
   onSelectResident
 }: Props) {
+  const currentUser = useCurrentUser();
   // Version history per document ID: Record<docId, DocumentVersion[]>
   const [versionHistory, setVersionHistory] = useState<Record<string, DocumentVersion[]>>({});
   // Selected version index per document ID: Record<docId, number>
@@ -176,6 +179,7 @@ export function DocumentGeneratorPanel({
       });
       const data = await res.json();
       const newText = data.text;
+      const genMode = data.generation_mode || "deterministic_fallback";
 
       setVersionHistory((prev) => {
         const currentList = prev[template.id] || [];
@@ -185,7 +189,8 @@ export function DocumentGeneratorPanel({
           time: timeStr,
           date: todayStr,
           text: newText,
-          isSaved: false
+          isSaved: false,
+          generationMode: genMode
         };
         return { ...prev, [template.id]: [newVer, ...currentList] };
       });
@@ -222,23 +227,22 @@ export function DocumentGeneratorPanel({
       const results = data.results || {};
 
       setVersionHistory((prev) => {
-        const nextHistory = { ...prev };
-        DOCUMENT_REGISTRY.forEach((template) => {
-          const text = results[template.id]?.text || "";
-          if (text) {
-            const currentList = nextHistory[template.id] || [];
-            const newVerNumber = currentList.length + 1;
-            const newVer: DocumentVersion = {
-              version: newVerNumber,
-              time: timeStr,
-              date: todayStr,
-              text,
-              isSaved: false
-            };
-            nextHistory[template.id] = [newVer, ...currentList];
-          }
+        const nextHist: Record<string, DocumentVersion[]> = { ...prev };
+        Object.entries(results).forEach(([docId, val]) => {
+          const itemVal = val as { text: string; timestamp: string; generation_mode?: "llm_refined" | "deterministic_fallback" };
+          const currentList = nextHist[docId] || [];
+          const newVerNumber = currentList.length + 1;
+          const newVer: DocumentVersion = {
+            version: newVerNumber,
+            time: itemVal.timestamp || timeStr,
+            date: todayStr,
+            text: itemVal.text,
+            isSaved: false,
+            generationMode: itemVal.generation_mode || "deterministic_fallback"
+          };
+          nextHist[docId] = [newVer, ...currentList];
         });
-        return nextHistory;
+        return nextHist;
       });
 
       const nextIdx: Record<string, number> = {};
@@ -307,10 +311,13 @@ export function DocumentGeneratorPanel({
         return { ...prev, [template.id]: updatedList };
       });
     } else if (action === "export_pdf") {
+      const authorName = currentUser?.name
+        ? `${currentUser.name} (${currentUser.roleLabel})`
+        : "작성자 미지정";
       const exportMetadata: ExportMetadata = {
-        author: "박지영 사회복지사",
-        reviewer: "김철수 팀장",
-        approver: "이영희 센터장",
+        author: authorName,
+        reviewer: "미지정",
+        approver: "미지정",
         version: activeVer.version,
         exportedAt: activeVer.time,
         documentTitle: template.title,
@@ -523,6 +530,17 @@ export function DocumentGeneratorPanel({
                             {history.length > 1 && (
                               <Badge className="bg-sky-100 text-sky-800 border-sky-200 text-[9px] font-extrabold flex items-center gap-1">
                                 <History size={10} /> {history.length}개 버전 누적
+                              </Badge>
+                            )}
+
+                            {hasVersions && activeVersion?.generationMode === "llm_refined" && (
+                              <Badge className="bg-emerald-600 text-white font-bold text-[9px]">
+                                ✨ AI 문장 초안
+                              </Badge>
+                            )}
+                            {hasVersions && activeVersion?.generationMode === "deterministic_fallback" && (
+                              <Badge className="bg-slate-500 text-white font-bold text-[9px]">
+                                📋 기록 기반 자동 초안
                               </Badge>
                             )}
                           </div>

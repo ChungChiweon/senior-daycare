@@ -34,8 +34,8 @@ export function MobileFieldLogger({ residents, onSaveFieldRecord }: Props) {
     const resident = residents.find((r) => r.id === selectedResidentId) || residents[0];
     const newRecord: FieldRecord = {
       id: `field-${Date.now()}`,
-      residentId: selectedResidentId,
-      residentName: resident ? resident.name : "김순자",
+      residentId: resident?.id || selectedResidentId,
+      residentName: resident ? resident.name : "이용자",
       category,
       timeStr: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
       location,

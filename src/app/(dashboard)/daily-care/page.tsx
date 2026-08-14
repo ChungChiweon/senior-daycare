@@ -22,20 +22,29 @@ export default function DailyCarePage() {
   );
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("silvercare.dailyCare") || localStorage.getItem("silvercare.residents");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setResidents(parsed);
-            setExpandedId(parsed[0].id);
+    const loadData = () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("silvercare.dailyCare") || localStorage.getItem("silvercare.residents");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              setResidents(parsed);
+              if (parsed.length > 0) {
+                setExpandedId((prev) => prev || parsed[0].id);
+              }
+            }
+          } catch {
+            setResidents([]);
           }
-        } catch {
+        } else {
           setResidents([]);
         }
       }
-    }
+    };
+    loadData();
+    window.addEventListener("storage", loadData);
+    return () => window.removeEventListener("storage", loadData);
   }, []);
 
   const saveState = (updated: Resident[]) => {

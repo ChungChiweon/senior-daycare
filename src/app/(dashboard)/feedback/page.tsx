@@ -9,6 +9,7 @@ import {
   Send,
   Sparkles
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-auth-org";
 
 type FeedbackCategory = "feature" | "ux" | "workflow" | "trust";
 
@@ -28,6 +29,7 @@ type FeedbackItem = {
 };
 
 export default function BetaFeedbackPage() {
+  const currentUser = useCurrentUser();
   const [activeTab, setActiveTab] = useState<"feedback" | "interview">("feedback");
   const [screen, setScreen] = useState("오늘의 케어 / AI 문서 생성");
   const [category, setCategory] = useState<FeedbackCategory>("workflow");
@@ -122,8 +124,8 @@ export default function BetaFeedbackPage() {
     const newFb: FeedbackItem = {
       id: `fb-${Date.now()}`,
       orgName: "행복주간보호센터 A",
-      userName: "박지영 사회복지사",
-      userRole: "social_worker",
+      userName: currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "사회복지사",
+      userRole: currentUser?.roleCode || "social_worker",
       category,
       categoryLabel: catLabels[category],
       screen,

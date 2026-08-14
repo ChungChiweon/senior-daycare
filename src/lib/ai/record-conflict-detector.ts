@@ -38,7 +38,7 @@ const OPPOSING_PAIRS = [
 
 export function detectRecordConflicts(
   blocks: RecordBlock[],
-  residentName: string = "김순자",
+  residentName: string = "이용자",
   residentId: string = "res-01"
 ): RecordConflict[] {
   const conflicts: RecordConflict[] = [];
