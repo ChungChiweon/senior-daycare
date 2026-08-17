@@ -39,7 +39,7 @@ export default function SuperAdminBetaProgramPage() {
   const [institutions, setInstitutions] = useState<BetaInstitution[]>([
     {
       id: "org-daycare-a",
-      name: "행복주간보호센터 A (본점)",
+      name: "기관 A (본점)",
       status: "operating",
       statusLabel: "🔵 파일럿 3주차 가동중",
       managerName: "김철수 시설장",
@@ -52,7 +52,7 @@ export default function SuperAdminBetaProgramPage() {
     },
     {
       id: "org-daycare-b",
-      name: "행복주간보호센터 B (강남점)",
+      name: "기관 B (지점)",
       status: "onboarding",
       statusLabel: "🟠 파일럿 1주차 온보딩",
       managerName: "이강남 원장님",

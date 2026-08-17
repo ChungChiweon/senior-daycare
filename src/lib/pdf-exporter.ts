@@ -1,10 +1,15 @@
 import { jsPDF } from "jspdf";
 import type { ExportMetadata, RecordBlock } from "@/types/record-block";
 
+// ExportMetadata에 institutionName 추가 (없으면 generic fallback 사용)
+export type PdfExportOptions = {
+  institutionName?: string;
+};
+
 export function generatePdfDocument(
   docTitle: string,
   blocks: RecordBlock[],
-  metadata: ExportMetadata
+  metadata: ExportMetadata & { institutionName?: string }
 ): jsPDF {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -24,8 +29,9 @@ export function generatePdfDocument(
 
   // Metadata Subheader
   doc.setFontSize(9);
+  const instName = metadata.institutionName ?? "주간보호센터";
   doc.text(
-    `기관: 행복주간보호센터 | 이용자: ${metadata.residentName} | 일자: ${metadata.exportedAt} | v${metadata.version}`,
+    `기관: ${instName} | 이용자: ${metadata.residentName} | 일자: ${metadata.exportedAt} | v${metadata.version}`,
     pageWidth / 2,
     y,
     { align: "center" }

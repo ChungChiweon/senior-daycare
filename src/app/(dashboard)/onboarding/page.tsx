@@ -8,11 +8,11 @@ import { Building2, CheckCircle2, MapPin, Phone, ShieldCheck, Users, Zap } from 
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [centerName, setCenterName] = useState("행복주간보호센터 B (강남점)");
-  const [businessNum, setBusinessNum] = useState("284-81-01934");
-  const [address, setAddress] = useState("서울특별시 강남구 학동로 201");
-  const [phone, setPhone] = useState("02-543-9876");
-  const [capacity, setCapacity] = useState("35");
+  const [centerName, setCenterName] = useState("");
+  const [businessNum, setBusinessNum] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [capacity, setCapacity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -72,7 +72,7 @@ export default function OnboardingPage() {
               value={centerName}
               onChange={(e) => setCenterName(e.target.value)}
               className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-900 font-bold focus:border-sky-500 focus:bg-white focus:outline-none"
-              placeholder="예: 행복주간보호센터"
+              placeholder="예: 우리 기관명"
             />
           </div>
 

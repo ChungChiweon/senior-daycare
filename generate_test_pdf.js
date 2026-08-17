@@ -28,7 +28,7 @@ doc.text(docTitle, pageWidth / 2, y, { align: "center" });
 y += 8;
 
 doc.setFontSize(9);
-doc.text(`기관: 행복주간보호센터 | 수급자: ${residentName} | 출력일시: ${exportedAt}`, pageWidth / 2, y, { align: "center" });
+doc.text(`기관: 테스트 기관 | 수급자: ${residentName} | 출력일시: ${exportedAt}`, pageWidth / 2, y, { align: "center" });
 y += 6;
 
 doc.line(margin, y, pageWidth - margin, y);

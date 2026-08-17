@@ -111,7 +111,7 @@ function getOpenAiClient(): { client: OpenAI | null; model: string; isEnabled: b
 }
 
 /** gpt-5* and reasoning models use Responses API; everything else uses Chat Completions */
-function useResponsesApi(model: string): boolean {
+function shouldUseResponsesApi(model: string): boolean {
   return /^(gpt-5|o1|o3|o4)/.test(model);
 }
 
@@ -127,7 +127,7 @@ async function callLLM(
   userPrompt: string,
   maxTokens: number
 ): Promise<LLMResult> {
-  if (useResponsesApi(model)) {
+  if (shouldUseResponsesApi(model)) {
     // ── Responses API path (gpt-5*, o-series) ──────────────────────────────
     // reasoning.effort is required for gpt-5-mini: without it, reasoning tokens
     // can exhaust the entire output budget leaving visible text empty.
@@ -206,7 +206,7 @@ export async function generateConsultationSummaryLLM(
   input: ConsultationSummaryInput
 ): Promise<ConsultationSummaryOutput> {
   const startTime = Date.now();
-  const orgId = input.organizationId || "org-hands-on-beta";
+  const orgId = input.organizationId;
   const sourceIds = input.facts.map((f) => f.source_id);
 
   const buildDeterministicSummary = (fallbackReason?: string): ConsultationSummaryOutput => {
@@ -229,6 +229,8 @@ export async function generateConsultationSummaryLLM(
     };
   };
 
+  if (!orgId) return buildDeterministicSummary("Missing organization context");
+
   if (!FeatureKillSwitchStore.isFeatureEnabled(orgId, "consultation_summary"))
     return buildDeterministicSummary("Kill Switch Disabled");
 
@@ -248,7 +250,7 @@ ${JSON.stringify(boundedFacts, null, 2)}`;
   try {
     // gpt-5-mini reasoning models consume extra tokens for reasoning;
     // use larger budget so visible output is not crowded out.
-    const maxTok_cs = useResponsesApi(model) ? 1200 : 600;
+    const maxTok_cs = shouldUseResponsesApi(model) ? 1200 : 600;
     const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_cs);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(
@@ -281,13 +283,15 @@ export async function generateDocumentDraftLLM(
   input: DocumentDraftInput
 ): Promise<DocumentDraftOutput> {
   const startTime = Date.now();
-  const orgId = input.organizationId || "org-hands-on-beta";
+  const orgId = input.organizationId;
   const sourceIds = input.blocks.map((b) => b.id);
 
   const buildDeterministicDraft = (fallbackReason?: string): DocumentDraftOutput => {
     logAiUsage({ timestamp: new Date().toISOString(), task: "document_draft", model: "deterministic_engine", latencyMs: Date.now() - startTime, success: true, generationMode: "deterministic_fallback", fallbackReason });
     return { document_title: input.templateTitle, refined_text: input.deterministicSkeleton, source_ids: sourceIds, generation_mode: "deterministic_fallback", model: "deterministic_engine" };
   };
+
+  if (!orgId) return buildDeterministicDraft("Missing organization context");
 
   if (!FeatureKillSwitchStore.isFeatureEnabled(orgId, "document_draft"))
     return buildDeterministicDraft("Kill Switch Disabled");
@@ -311,7 +315,7 @@ ${input.deterministicSkeleton}
 ${JSON.stringify(boundedBlocks, null, 2)}`;
 
   try {
-    const maxTok_dd = useResponsesApi(model) ? 1600 : 800;
+    const maxTok_dd = shouldUseResponsesApi(model) ? 1600 : 800;
     const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_dd);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(parsed.refined_text ?? "", sourceIds, parsed.source_ids ?? []);
@@ -338,8 +342,8 @@ export async function generateGuardianNoticeLLM(
   input: GuardianNoticeInput
 ): Promise<GuardianNoticeOutput> {
   const startTime = Date.now();
-  const orgId = input.organizationId || "org-hands-on-beta";
-  const place = input.institutionName || "행복주간보호센터";
+  const orgId = input.organizationId;
+  const place = input.institutionName || "소속 기관이 설정되지 않았습니다.";
 
   const buildDeterministicNotice = (fallbackReason?: string): GuardianNoticeOutput => {
     logAiUsage({ timestamp: new Date().toISOString(), task: "guardian_notice", model: "deterministic_engine", latencyMs: Date.now() - startTime, success: true, generationMode: "deterministic_fallback", fallbackReason });
@@ -350,6 +354,8 @@ ${input.residentName} 어르신 보호자님, 안녕하십니까.
 ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}가정에서도 편안하고 건강한 저녁 시간 보내시길 바랍니다.`;
     return { notice_title: `${input.residentName} 어르신 일일 알림장`, notice_body: text, generation_mode: "deterministic_fallback", model: "deterministic_engine" };
   };
+
+  if (!orgId) return buildDeterministicNotice("Missing organization context");
 
   if (!FeatureKillSwitchStore.isFeatureEnabled(orgId, "consultation_summary"))
     return buildDeterministicNotice("Kill Switch Disabled");
@@ -373,7 +379,7 @@ ${input.cautionNotes ? `• 특이사항 안내: ${input.cautionNotes}\n` : ""}�
 [특이 관찰 사실]: ${input.cautionNotes || "특이사항 없이 밝은 모습으로 활동 완료"}`;
 
   try {
-    const maxTok_gn = useResponsesApi(model) ? 800 : 500;
+    const maxTok_gn = shouldUseResponsesApi(model) ? 800 : 500;
     const result = await callLLM(client, model, SOCIAL_WORK_SYSTEM_INSTRUCTION, userPrompt, maxTok_gn);
     const parsed = JSON.parse(result.text);
     const validation = validateSocialWorkOutput(parsed.notice_body ?? "");

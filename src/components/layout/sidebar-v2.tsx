@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -32,6 +33,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentUser } from "@/hooks/use-auth-org";
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
+import { facilityTypeLabel } from "@/types/organization";
 
 type NavItem = {
   href: string;
@@ -96,58 +100,89 @@ const navGroups: NavGroup[] = [
   }
 ];
 
-import { useCurrentUser } from "@/hooks/use-auth-org";
-
 export function SidebarV2() {
   const pathname = usePathname();
   const router = useRouter();
   const currentUser = useCurrentUser();
-  const [email, setEmail] = useState("사회복지사 (행복주간보호)");
+  const orgState = useOrganizationProfile();
+  const [email, setEmail] = useState("");
 
-  const isManagerOrAdmin = currentUser?.roleCode === "manager";
+  const isManagerOrAdmin = ["facility_manager", "organization_admin", "manager", "superadmin"].includes(orgState.role ?? "");
 
   const visibleNavGroups = navGroups.map((group) => ({
     ...group,
     items: group.items.filter((item) => {
-      if (item.href.startsWith("/admin") && !isManagerOrAdmin) {
-        return false;
-      }
+      if (item.href.startsWith("/admin") && !isManagerOrAdmin) return false;
       return true;
     })
   })).filter((group) => group.items.length > 0);
 
   useEffect(() => {
+    // 로그인 사용자 이메일 표시
     const raw = window.localStorage.getItem("silvercare.demoUser");
     if (raw) {
-      const user = JSON.parse(raw) as { email?: string };
-      if (user.email) setEmail(user.email);
+      try {
+        const user = JSON.parse(raw) as { email?: string };
+        if (user.email) setEmail(user.email);
+      } catch { /* ignore */ }
     }
-  }, []);
+    if (!email && currentUser?.name) setEmail(currentUser.name);
+  }, [currentUser, email]);
 
   async function logout() {
     try {
       const supabase = createClient();
-      if (supabase) {
-        await supabase.auth.signOut().catch(() => {});
-      }
-    } catch {
-      // ignore
-    }
+      if (supabase) await supabase.auth.signOut().catch(() => {});
+    } catch { /* ignore */ }
     window.localStorage.removeItem("silvercare.demoUser");
     router.push("/login");
   }
 
+  // ── 기관 정보 렌더 ─────────────────────────────────────────────────────────
+  const org = orgState.org;
+  const orgName = org?.name ?? (orgState.status === "missing" ? "소속 기관이 설정되지 않았습니다." : "로딩 중...");
+  const orgSubtitle = org ? facilityTypeLabel(org.facility_type) : "장기요양 운영 SaaS";
+  const logoUrl = org?.logo_url;
+
   return (
     <aside className="sticky top-0 hidden h-screen w-60 border-r border-slate-800 bg-[#0d1b2a] text-slate-200 lg:flex lg:flex-col">
+      {/* 기관 로고 + 이름 */}
       <Link href="/dashboard" className="flex items-center gap-3 px-5 pt-5 pb-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-white font-bold shadow-md">
-          <Building2 size={20} />
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-500 text-white font-bold shadow-md overflow-hidden">
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={orgName}
+              fill
+              sizes="36px"
+              className="object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <Building2 size={20} />
+          )}
         </div>
-        <div>
-          <p className="text-base font-bold text-white tracking-tight">행복주간보호센터</p>
-          <p className="text-[11px] font-semibold text-sky-400">장기요양 운영 SaaS</p>
+        <div className="min-w-0">
+          <p
+            className={cn(
+              "text-base font-bold tracking-tight truncate",
+              orgState.status === "missing" ? "text-amber-400" : "text-white"
+            )}
+            title={orgName}
+          >
+            {orgName}
+          </p>
+          <p className="text-[11px] font-semibold text-sky-400 truncate">{orgSubtitle}</p>
         </div>
       </Link>
+
+      {/* 소속 기관 없음 경고 */}
+      {orgState.status === "missing" && (
+        <div className="mx-3 mb-2 rounded-md bg-amber-900/40 border border-amber-700/50 px-3 py-2 text-[11px] text-amber-300">
+          기관 설정이 필요합니다.{" "}
+          <Link href="/settings" className="underline hover:text-amber-100">설정하기 →</Link>
+        </div>
+      )}
 
       <nav className="mt-2 flex-1 overflow-y-auto px-3 space-y-4">
         {visibleNavGroups.map((group) => (
@@ -187,7 +222,7 @@ export function SidebarV2() {
       </nav>
 
       <div className="border-t border-slate-800 p-4">
-        <p className="truncate text-xs font-semibold text-slate-400">{email}</p>
+        <p className="truncate text-xs font-semibold text-slate-400">{email || currentUser?.name}</p>
         <button
           type="button"
           className="mt-2 flex h-8 w-full items-center gap-2 rounded-md px-2 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white"

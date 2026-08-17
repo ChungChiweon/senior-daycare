@@ -39,7 +39,7 @@ export default function LoginPage() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white font-black text-xl shadow-lg mb-1">
             행
           </div>
-          <h1 className="text-xl font-black text-white tracking-tight">행복주간보호 센터 ERP 로그인</h1>
+          <h1 className="text-xl font-black text-white tracking-tight">SilverCare ERP 로그인</h1>
           <p className="text-xs text-slate-400">
             주간보호 센터 운영, AI 문서 자동화 및 협업 멀티테넌트 SaaS
           </p>

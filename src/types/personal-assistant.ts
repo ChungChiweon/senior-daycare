@@ -70,6 +70,7 @@ export type PersonalAssistantContext = {
   user_id: string;
   user_name: string;
   organization_id: string;
+  organization_name: string;
   role: string;
   assigned_residents_count: number;
   today_tasks: { id: string; title: string; due: string; done: boolean }[];

@@ -37,7 +37,7 @@ export const TWENTY_DOCUMENT_TYPES: DocumentTypeInfo[] = [
     actionType: "send",
     targetAudience: "보호자 (SMS/LMS)",
     defaultDraftGenerator: (name, date) =>
-      `[행복주간보호센터] ${name} 어르신 ${date} 일일요약: 식사 전량 섭취, 활력징후 정상, 오후 인지 칠교놀이 모범 참여 후 안전 귀가하셨습니다.`
+      `[{{organizationName}}] ${name} 어르신 ${date} 일일요약: 식사 전량 섭취, 활력징후 정상, 오후 인지 칠교놀이 모범 참여 후 안전 귀가하셨습니다.`
   },
   {
     id: "doc_03",
@@ -52,7 +52,7 @@ export const TWENTY_DOCUMENT_TYPES: DocumentTypeInfo[] = [
     actionType: "send",
     targetAudience: "보호자 (카카오 알림톡)",
     defaultDraftGenerator: (name, date) =>
-      `[행복주간보호 알림톡]\n■ 어르신: ${name} 님\n■ 일자: ${date}\n■ 등하원: 08:45 등원 / 16:30 하원\n■ 오늘의 생활: 식사 전량 섭취, 인지 프로그램 우수 참여\n■ 전달사항: 무릎 온찜질 당부드립니다.`
+      `[{{organizationName}} 알림톡]\n■ 어르신: ${name} 님\n■ 일자: ${date}\n■ 등하원: 08:45 등원 / 16:30 하원\n■ 오늘의 생활: 식사 전량 섭취, 인지 프로그램 우수 참여\n■ 전달사항: 무릎 온찜질 당부드립니다.`
   },
   {
     id: "doc_04",
@@ -253,7 +253,7 @@ export const TWENTY_DOCUMENT_TYPES: DocumentTypeInfo[] = [
     actionType: "publish",
     targetAudience: "전체 보호자 가정",
     defaultDraftGenerator: (name, date) =>
-      `[행복주간보호센터 가정통신문]\n보호자님 안녕하십니까. ${date} 오늘 어르신들과 함께 인지 향상 칠교놀이를 진행하였습니다. 환절기 건강 관리에 유의하시기 바랍니다.`
+      `[{{organizationName}} 가정통신문]\n보호자님 안녕하십니까. ${date} 오늘 어르신들과 함께 인지 향상 칠교놀이를 진행하였습니다. 환절기 건강 관리에 유의하시기 바랍니다.`
   },
   {
     id: "doc_17",
@@ -268,7 +268,7 @@ export const TWENTY_DOCUMENT_TYPES: DocumentTypeInfo[] = [
     actionType: "publish",
     targetAudience: "네이버 블로그 / 일반 대중",
     defaultDraftGenerator: (name, date) =>
-      `[행복주간보호 블로그] ${date} 오늘의 인지재활 이야기!\n오늘 우리 행복주간보호센터에서는 어르신들의 웃음꽃이 피어나는 '뇌자극 칠교놀이'를 진행했습니다! 집중해서 교구를 조작하시는 모습이 정말 멋지셨습니다!`
+      `[{{organizationName}} 블로그] ${date} 오늘의 인지재활 이야기!\n오늘 우리 센터에서는 어르신들의 웃음꽃이 피어나는 '뇌자극 칠교놀이'를 진행했습니다! 집중해서 교구를 조작하시는 모습이 정말 멋지셨습니다!`
   },
   {
     id: "doc_18",
@@ -283,7 +283,7 @@ export const TWENTY_DOCUMENT_TYPES: DocumentTypeInfo[] = [
     actionType: "publish",
     targetAudience: "인스타그램 피드",
     defaultDraftGenerator: (name, date) =>
-      `[카드뉴스 슬라이드 텍스트]\nSlide 1: 뇌가 쌩쌩해지는 실버 칠교놀이!\nSlide 2: 집중력 100% 어르신들의 인지재활 현장\n#주간보호센터 #노인복지 #인지재활 #데이케어센터 #행복주간보호`
+      `[카드뉴스 슬라이드 텍스트]\nSlide 1: 뇌가 쌩쌩해지는 실버 칠교놀이!\nSlide 2: 집중력 100% 어르신들의 인지재활 현장\n#주간보호센터 #노인복지 #인지재활 #데이케어센터`
   },
   {
     id: "doc_19",

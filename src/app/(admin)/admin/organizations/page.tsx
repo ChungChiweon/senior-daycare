@@ -12,7 +12,7 @@ export default function SuperAdminOrganizationsPage() {
   const [orgs, setOrgs] = useState([
     {
       id: "org-daycare-a",
-      name: "행복주간보호센터 A (본점)",
+      name: "기관 A (본점)",
       businessNum: "124-81-90234",
       createdAt: "2026-07-15",
       usersCount: 15,
@@ -22,7 +22,7 @@ export default function SuperAdminOrganizationsPage() {
     },
     {
       id: "org-daycare-b",
-      name: "행복주간보호센터 B (강남점)",
+      name: "기관 B (지점)",
       businessNum: "284-81-01934",
       createdAt: "2026-07-28",
       usersCount: 8,
@@ -32,7 +32,7 @@ export default function SuperAdminOrganizationsPage() {
     },
     {
       id: "org-daycare-c",
-      name: "미소시니어 데이케어센터 (베타)",
+      name: "기관 C (베타)",
       businessNum: "305-88-12940",
       createdAt: "2026-08-01",
       usersCount: 4,

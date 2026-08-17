@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       } else if (tpl.category === "program") {
         return `[프로그램 운영 보고서] ${tpl.title.replace(/^\d+\.\s*/, "")}\n- 수급자: ${residentName} 어르신 외 출석 수급자 전체\n- 시행 프로그램: 인지기능 재활 칠교놀이\n- 사실 기록: ${residentName} 어르신 인지 활동에 정상 참여함.`;
       } else {
-        return `[행복주간보호 센터 소식] ${tpl.title.replace(/^\d+\.\s*/, "")}\n${activityDate} ${residentName} 어르신과 함께한 인지 프로그램 활동 소식입니다.`;
+        return `[센터 소식] ${tpl.title.replace(/^\d+\.\s*/, "")}\n${activityDate} ${residentName} 어르신과 함께한 인지 프로그램 활동 소식입니다.`;
       }
     }
 

@@ -134,7 +134,7 @@ const totalPages = pdfDoc.getNumberOfPages();
 for (let p = 1; p <= totalPages; p++) {
   pdfDoc.setPage(p);
   pdfDoc.setFontSize(8);
-  pdfDoc.text(`기관: 행복주간보호센터 | 작성자: 박지영 | Page ${p} / ${totalPages}`, 105, 285, { align: "center" });
+  pdfDoc.text(`기관: 테스트 기관 | 작성자: 박지영 | Page ${p} / ${totalPages}`, 105, 285, { align: "center" });
 }
 
 const outDir = path.join(__dirname, "test_output");

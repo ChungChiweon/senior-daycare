@@ -45,9 +45,9 @@ export default function SuperAdminDashboardPage() {
   };
 
   const sampleOrgs = [
-    { id: "org-a", name: "행복주간보호센터 A (본점)", users: 15, residents: 35, status: "active", createdAt: "2026-07-15" },
-    { id: "org-b", name: "행복주간보호센터 B (강남점)", users: 8, residents: 20, status: "active", createdAt: "2026-07-28" },
-    { id: "org-c", name: "미소시니어 데이케어센터 (베타)", users: 4, residents: 10, status: "testing", createdAt: "2026-08-01" }
+    { id: "org-a", name: "기관 A (본점)", users: 15, residents: 35, status: "active", createdAt: "2026-07-15" },
+    { id: "org-b", name: "기관 B (지점)", users: 8, residents: 20, status: "active", createdAt: "2026-07-28" },
+    { id: "org-c", name: "기관 C (베타)", users: 4, residents: 10, status: "testing", createdAt: "2026-08-01" }
   ];
 
   return (

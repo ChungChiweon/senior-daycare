@@ -60,8 +60,8 @@ export default function SuperAdminBetaReportPage() {
             onChange={(e) => setActiveOrgId(e.target.value)}
             className="rounded-xl border border-slate-700 bg-slate-900 p-2 text-xs font-black text-white focus:border-sky-500 focus:outline-none"
           >
-            <option value="org-daycare-a">행복주간보호센터 A (본점)</option>
-            <option value="org-daycare-b">행복주간보호센터 B (강남점)</option>
+            <option value="org-daycare-a">기관 A (본점)</option>
+            <option value="org-daycare-b">기관 B (지점)</option>
           </select>
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { GeneratedDocItem, UnifiedGenerationInput } from "@/types/content";
 
 export function generateTwentyDocs(input: UnifiedGenerationInput, isTrialMode = false): GeneratedDocItem[] {
   const senior = input.seniorName ? `${input.seniorName} 어르신` : "어르신";
-  const place = input.institution?.name ?? "행복주간보호센터";
+  const place = input.institution?.name ?? "소속 기관이 설정되지 않았습니다.";
   const activity = input.activityName || "실버 건강체조 및 뇌자극 칠교놀이";
   const date = input.activityDate || new Date().toISOString().split("T")[0];
   const health = input.healthStatus || "양호 (혈압 120/80, 체온 36.5℃)";

@@ -58,13 +58,14 @@ export class PersonalAssistantEngine {
   static buildContextFromAuth(
     userId?: string,
     orgId?: string,
+    orgName?: string,
     role = "사회복지사",
     userEnteredTasks: { id: string; title: string; due: string; done: boolean }[] = [],
     userEnteredPreparedItems: AssistantPreparedItem[] = [],
     assignedResidentsCount = 0,
     recentRecordsCount = 0
   ): PersonalAssistantContext | null {
-    if (!userId || !orgId) {
+    if (!userId || !orgId || !orgName) {
       console.info("PersonalAssistantEngine: Unauthenticated or missing organization. Returning empty state.");
       return null;
     }
@@ -73,6 +74,7 @@ export class PersonalAssistantEngine {
       user_id: userId,
       user_name: role === "사회복지사" ? "사회복지사 (베타 참여자)" : "기관 관리자",
       organization_id: orgId,
+      organization_name: orgName,
       role: role,
       assigned_residents_count: assignedResidentsCount,
       today_tasks: userEnteredTasks,

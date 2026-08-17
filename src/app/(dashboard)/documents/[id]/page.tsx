@@ -5,11 +5,17 @@ import Link from "next/link";
 import { ArrowLeft, Edit3, Eye, History, Printer, Save, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
 
 export default function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const docId = resolvedParams.id;
   const [activeTab, setActiveTab] = useState<"preview" | "edit" | "versions">("preview");
+  const orgState = useOrganizationProfile();
+  const organizationLabel =
+    orgState.status === "ready"
+      ? `${orgState.org.name}${orgState.org.facility_code ? ` (${orgState.org.facility_code})` : ""}`
+      : "소속 기관이 설정되지 않았습니다.";
 
   // Editable Form State
   const [formData, setFormData] = useState({
@@ -112,7 +118,7 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
             <div>수급자 성명: <span className="font-bold">{formData.residentName}</span></div>
             <div>장기요양인정번호: <span className="font-mono font-bold">{formData.careNumber}</span></div>
             <div>장기요양등급: <span className="font-bold">{formData.grade}</span></div>
-            <div>기관명: <span className="font-bold">행복주간보호센터 (1234567890)</span></div>
+            <div>기관명: <span className="font-bold">{organizationLabel}</span></div>
           </div>
 
           <div className="space-y-2">

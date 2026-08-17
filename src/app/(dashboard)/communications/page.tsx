@@ -6,6 +6,7 @@ import { MessageSquare, Send, Sparkles, UserPlus, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Resident } from "@/data/mock-daycare-store";
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
 
 export default function CommunicationsPage() {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -15,6 +16,7 @@ export default function CommunicationsPage() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationMode, setGenerationMode] = useState<"llm_refined" | "deterministic_fallback" | null>(null);
+  const orgState = useOrganizationProfile();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -37,10 +39,14 @@ export default function CommunicationsPage() {
 
   async function generateAiNotice() {
     if (!currentResident) return;
+    if (orgState.status !== "ready") {
+      setMessage("소속 기관이 설정되지 않았습니다.");
+      setGenerationMode("deterministic_fallback");
+      return;
+    }
     setIsGenerating(true);
 
-    // Baseline fallback template
-    const fallbackText = `[행복주간보호센터 일일 알림장]
+    const fallbackText = `[${orgState.org.name} 일일 알림장]
 ${currentResident.name} 어르신 보호자님, 안녕하십니까.
 오늘 어르신께서는 센터 일일 케어와 프로그램에 참여하셨습니다.
 점심 식사(${currentResident.mealLunch || "전량"})와 지정 투약(${currentResident.medication || "완료"})을 완료하셨으며, 혈압(${currentResident.bloodPressure || "120/80"})과 체온(${currentResident.temperature || "36.5℃"})을 확인하였습니다.
@@ -51,6 +57,7 @@ ${currentResident.cautionNotes ? `• 특이사항: ${currentResident.cautionNot
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          organizationId: orgState.org.id,
           residentId: currentResident.id,
           residentName: currentResident.name,
           guardianName: currentResident.guardianName,
@@ -61,7 +68,7 @@ ${currentResident.cautionNotes ? `• 특이사항: ${currentResident.cautionNot
           activityName: "맞춤형 신체·인지 재활 활동",
           cautionNotes: currentResident.cautionNotes,
           activityDate: new Date().toISOString().split("T")[0],
-          institutionName: "행복주간보호센터"
+          institutionName: orgState.org.name
         })
       });
 

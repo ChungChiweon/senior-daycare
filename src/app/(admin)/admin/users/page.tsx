@@ -10,11 +10,11 @@ export default function SuperAdminUsersPage() {
   const [search, setSearch] = useState("");
 
   const [users, setUsers] = useState([
-    { id: "usr-1", name: "김철수", email: "manager@daycare-a.com", orgName: "행복주간보호센터 A", role: "시설장", status: "active", lastLogin: "2026-08-01 17:05" },
-    { id: "usr-2", name: "박지영", email: "park.social@daycare-a.com", orgName: "행복주간보호센터 A", role: "사회복지사", status: "active", lastLogin: "2026-08-01 16:30" },
-    { id: "usr-3", name: "이간호", email: "lee.nurse@daycare-a.com", orgName: "행복주간보호센터 A", role: "간호조무사", status: "active", lastLogin: "2026-08-01 15:40" },
-    { id: "usr-4", name: "김송영", email: "kim.care@daycare-a.com", orgName: "행복주간보호센터 A", role: "요양보호사", status: "active", lastLogin: "2026-08-01 14:05" },
-    { id: "usr-5", name: "최사무", email: "choi.clerk@daycare-a.com", orgName: "행복주간보호센터 A", role: "사무원", status: "locked", lastLogin: "2026-07-29 11:20" }
+    { id: "usr-1", name: "김철수", email: "manager@daycare-a.com", orgName: "기관 A", role: "시설장", status: "active", lastLogin: "2026-08-01 17:05" },
+    { id: "usr-2", name: "박지영", email: "park.social@daycare-a.com", orgName: "기관 A", role: "사회복지사", status: "active", lastLogin: "2026-08-01 16:30" },
+    { id: "usr-3", name: "이간호", email: "lee.nurse@daycare-a.com", orgName: "기관 A", role: "간호조무사", status: "active", lastLogin: "2026-08-01 15:40" },
+    { id: "usr-4", name: "김송영", email: "kim.care@daycare-a.com", orgName: "기관 A", role: "요양보호사", status: "active", lastLogin: "2026-08-01 14:05" },
+    { id: "usr-5", name: "최사무", email: "choi.clerk@daycare-a.com", orgName: "기관 A", role: "사무원", status: "locked", lastLogin: "2026-07-29 11:20" }
   ]);
 
   function toggleLock(id: string) {

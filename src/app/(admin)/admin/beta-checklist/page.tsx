@@ -99,8 +99,8 @@ export default function SuperAdminBetaChecklistPage() {
             onChange={(e) => setActiveOrg(e.target.value)}
             className="rounded-xl border border-slate-300 bg-white p-2 text-xs font-black text-slate-900 focus:border-sky-500 focus:outline-none shadow-xs"
           >
-            <option value="org-daycare-a">행복주간보호센터 A (완료율 100%)</option>
-            <option value="org-daycare-b">행복주간보호센터 B (완료율 47%)</option>
+            <option value="org-daycare-a">기관 A (완료율 100%)</option>
+            <option value="org-daycare-b">기관 B (완료율 47%)</option>
             <option value="org-daycare-c">미소시니어 데이케어 (완료율 13%)</option>
           </select>
         </div>

@@ -7,6 +7,8 @@ import { ChartNoAxesCombined, FileText, FolderOpen, LogOut, Menu, Newspaper, Set
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
+
 const items = [
   { href: "/dashboard", label: "대시보드", icon: ChartNoAxesCombined },
   { href: "/create", label: "통합생성", icon: Sparkles },
@@ -20,6 +22,8 @@ export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const orgState = useOrganizationProfile();
+  const orgName = orgState.org?.name ?? (orgState.status === "missing" ? "소속 기관이 설정되지 않았습니다." : "주간보호센터 ERP");
 
   useEffect(() => {
     const raw = window.localStorage.getItem("silvercare.demoUser");
@@ -47,10 +51,11 @@ export function MobileNav() {
   return (
     <>
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-white px-4 lg:hidden">
-        <div className="flex items-center gap-2 text-sm font-black">
-          <Menu size={18} />
-          SilverCare AI
+        <div className="flex items-center gap-2 text-sm font-black truncate max-w-[60%]">
+          <Menu size={18} className="shrink-0" />
+          <span className="truncate">{orgName}</span>
         </div>
+
         <button type="button" className="flex max-w-[180px] items-center gap-2 truncate text-xs font-semibold text-muted" onClick={logout}>
           <span className="truncate">{email || "게스트"}</span>
           <LogOut size={15} />

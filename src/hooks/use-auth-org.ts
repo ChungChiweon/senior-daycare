@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { BETA_STAFF_ACCOUNTS, type BetaStaffAccount } from "@/lib/data/beta-institution-seed";
 import type { ErpRole } from "@/types/erp-task";
 
-export type CurrentOrg = {
-  id: string;
-  name: string;
-  businessNumber: string;
-  address: string;
-};
-
+// ── useCurrentUser: localStorage 기반 beta 계정 (변경 없음) ─────────────────
 export function useCurrentUser() {
   const [currentUser, setCurrentUser] = useState<BetaStaffAccount>(BETA_STAFF_ACCOUNTS[0]);
 
@@ -25,19 +19,30 @@ export function useCurrentUser() {
   return currentUser;
 }
 
-export function useOrganization(): CurrentOrg {
-  return {
-    id: "org-daycare-a",
-    name: "행복주간보호센터 A",
-    businessNumber: "124-82-94812",
-    address: "서울특별시 강남구 테헤란로 124"
-  };
-}
-
+// ── usePermission ─────────────────────────────────────────────────────────────
 export function usePermission(requiredRole?: ErpRole) {
   const currentUser = useCurrentUser();
-
   if (!requiredRole) return true;
   if (currentUser.roleCode === "manager") return true;
   return currentUser.roleCode === requiredRole;
+}
+
+// ── useOrganization: DEPRECATED — use useOrganizationProfile() instead ───────
+export type CurrentOrg = {
+  id: string;
+  name: string;
+  businessNumber: string;
+  address: string;
+};
+
+/** @deprecated use useOrganizationProfile() from @/hooks/use-organization-profile */
+export function useOrganization(): CurrentOrg {
+  const [org] = useState<CurrentOrg>({
+    id: "",
+    name: "소속 기관이 설정되지 않았습니다.",
+    businessNumber: "",
+    address: "",
+  });
+
+  return org;
 }

@@ -22,7 +22,7 @@ export default function SuperAdminSupportPage() {
   const [tickets, setTickets] = useState<SupportTicket[]>([
     {
       id: "sup-01",
-      orgName: "행복주간보호센터 A",
+      orgName: "기관 A",
       requesterName: "김철수 시설장",
       title: "급여제공기록지 직인 도장 이미지 등록 및 서명 서식 가이드 요청",
       priority: "high",
@@ -33,7 +33,7 @@ export default function SuperAdminSupportPage() {
     },
     {
       id: "sup-02",
-      orgName: "행복주간보호센터 B",
+      orgName: "기관 B",
       requesterName: "이강남 원장님",
       title: "어르신 20명 CSV 명부 파일 일괄 업로드 매핑 오류 문의",
       priority: "high",

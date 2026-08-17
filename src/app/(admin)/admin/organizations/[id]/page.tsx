@@ -27,7 +27,7 @@ export default function SuperAdminOrganizationDetailPage() {
 
   const orgDetail = {
     id: orgId,
-    name: "행복주간보호센터 A (본점)",
+    name: "기관 A (본점)",
     businessNum: "124-81-90234",
     address: "서울특별시 마포구 상암산로 76",
     phone: "02-304-8899",

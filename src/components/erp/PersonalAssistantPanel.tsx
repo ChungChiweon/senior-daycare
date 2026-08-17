@@ -26,6 +26,7 @@ import {
 } from "@/lib/personal-assistant-engine";
 import { FeatureKillSwitchStore, type AiFeatureKey } from "@/lib/feature-kill-switch";
 import type { AssistantPreparedItem, PersonalAssistantContext } from "@/types/personal-assistant";
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
 
 import { BETA_STAFF_ACCOUNTS } from "@/lib/data/beta-institution-seed";
 
@@ -41,6 +42,7 @@ export default function PersonalAssistantPanel() {
   const [actionMessage, setActionMessage] = useState("");
   const [staleError, setStaleError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const orgState = useOrganizationProfile();
 
   useEffect(() => {
     try {
@@ -69,7 +71,8 @@ export default function PersonalAssistantPanel() {
       // Build Context dynamically for active social worker
       const ctx = PersonalAssistantEngine.buildContextFromAuth(
         activeStaffId,
-        "org-hands-on-beta",
+        orgState.status === "ready" ? orgState.org.id : undefined,
+        orgState.status === "ready" ? orgState.org.name : undefined,
         role,
         [],
         userDrafts
@@ -85,7 +88,7 @@ export default function PersonalAssistantPanel() {
     } finally {
       setIsLoading(false);
     }
-  }, [isOpen]);
+  }, [isOpen, orgState]);
 
   const [isRefiningLlm, setIsRefiningLlm] = useState(false);
   const [reviewMode, setReviewMode] = useState<"llm_refined" | "deterministic_fallback" | null>(null);
@@ -114,6 +117,7 @@ export default function PersonalAssistantPanel() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          organizationId: context?.organization_id,
           residentId: selectedItemForReview.source_record_ids[0] || "res-01",
           residentName: selectedItemForReview.title.replace(/[^가-힣a-zA-Z0-9\s]/g, "").trim() || "이용자",
           facts: selectedItemForReview.source_record_ids.map((id) => ({

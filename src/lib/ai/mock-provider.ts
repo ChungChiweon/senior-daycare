@@ -10,7 +10,7 @@ const toneLabels = {
 
 function context(input: GenerationInput) {
   const keywordText = input.keywords.join(", ") || input.activityName || "어르신 건강체조 및 인지 훈련";
-  const place = input.institution?.name ?? "실버케어 주간보호센터";
+  const place = input.institution?.name ?? "소속 기관이 설정되지 않았습니다.";
   const seniorText = input.seniorName ? `${input.seniorName} 어르신` : "어르신";
   const dateText = input.activityDate ? new Date(input.activityDate).toLocaleDateString("ko-KR") : "오늘";
   const toneText = input.tone ? toneLabels[input.tone] : "따뜻한 감성형";

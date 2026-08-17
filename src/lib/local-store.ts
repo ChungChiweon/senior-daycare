@@ -9,11 +9,11 @@ const usageKey = "silvercare.dailyUsage";
 const savedItemsKey = "silvercare.savedItems";
 
 export const defaultInstitution: Institution = {
-  id: "demo_institution",
-  name: "행복한 실버케어 주간보호센터",
+  id: "",
+  name: "소속 기관이 설정되지 않았습니다.",
   type: "daycare_senior",
-  address: "서울시 강남구 역삼로 456 실버빌딩 2층",
-  phone: "02-555-7890"
+  address: "",
+  phone: ""
 };
 
 export function getCurrentUserId() {

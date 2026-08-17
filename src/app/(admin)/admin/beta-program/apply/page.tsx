@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export default function BetaInstitutionApplyPage() {
-  const [centerName, setCenterName] = useState("행복주간보호센터 C (신규 신청)");
+  const [centerName, setCenterName] = useState("기관 C (신규 신청)");
   const [residentCount, setResidentCount] = useState<number>(30);
   const [hasSocialWorker, setHasSocialWorker] = useState<boolean>(true);
   const [hasStaffTraining, setHasStaffTraining] = useState<boolean>(true);

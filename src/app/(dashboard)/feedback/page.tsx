@@ -10,6 +10,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth-org";
+import { useOrganizationProfile } from "@/hooks/use-organization-profile";
 
 type FeedbackCategory = "feature" | "ux" | "workflow" | "trust";
 
@@ -30,6 +31,8 @@ type FeedbackItem = {
 
 export default function BetaFeedbackPage() {
   const currentUser = useCurrentUser();
+  const orgState = useOrganizationProfile();
+  const orgName = orgState.status === "ready" ? orgState.org.name : "소속 기관이 설정되지 않았습니다.";
   const [activeTab, setActiveTab] = useState<"feedback" | "interview">("feedback");
   const [screen, setScreen] = useState("오늘의 케어 / AI 문서 생성");
   const [category, setCategory] = useState<FeedbackCategory>("workflow");
@@ -74,7 +77,7 @@ export default function BetaFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([
     {
       id: "fb-101",
-      orgName: "행복주간보호센터 A",
+      orgName: "기관 A",
       userName: "박지영 사회복지사",
       userRole: "social_worker",
       category: "workflow",
@@ -88,7 +91,7 @@ export default function BetaFeedbackPage() {
     },
     {
       id: "fb-102",
-      orgName: "행복주간보호센터 A",
+      orgName: "기관 A",
       userName: "이간호 간호조무사",
       userRole: "nurse",
       category: "feature",
@@ -123,7 +126,7 @@ export default function BetaFeedbackPage() {
 
     const newFb: FeedbackItem = {
       id: `fb-${Date.now()}`,
-      orgName: "행복주간보호센터 A",
+      orgName,
       userName: currentUser?.name ? `${currentUser.name} (${currentUser.roleLabel})` : "사회복지사",
       userRole: currentUser?.roleCode || "social_worker",
       category,
